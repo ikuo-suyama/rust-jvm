@@ -12,6 +12,24 @@ const IADD: u8 = 0x60;
 const IRETURN: u8 = 0xAC;
 
 fn main() {
+    /// The first primitive JVM. A simple instruction interpreter.
+    /// The code array is obtained by the following procedure.
+    ///
+    /// Compile SimpleSum.java, which performs a simple addition calculation.
+    /// ```sh
+    /// $ cd java/
+    /// $ javac src/SimpleSum.java
+    /// ````
+    ///
+    /// 2. extract the Code part of MethodAttribute from SimpleSum.class.
+    ///
+    /// 3. implement it by comparing it with the one decompiled into machine language.
+    /// ```sh
+    /// $ cd java/
+    /// $ javap -v -p -s -constants SimpleSum.class > SimpleSum.jvm
+    /// ```
+    /// Instruction Spec
+    /// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html
     let code:Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
     let mut pc = 0;
     let mut local_variable:Vec<u8> = vec![0, 0, 0];
