@@ -1,8 +1,6 @@
 use crate::thread::Frame;
 
-pub struct JVM {
-
-}
+pub struct JVM {}
 
 /// The first primitive JVM. A simple instruction interpreter.
 /// The code array is obtained by the following procedure.

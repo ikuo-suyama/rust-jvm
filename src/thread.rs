@@ -84,3 +84,13 @@ impl Frame {
         result
     }
 }
+
+#[test]
+fn test_invoke() {
+    let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
+    let frame = Frame {};
+
+    let result = frame.invoke(code);
+
+    assert!(result == 3);
+}
