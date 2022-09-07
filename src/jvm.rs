@@ -25,7 +25,9 @@ impl JVM {
         JVM {}
     }
 
-    pub fn launch(self) {
+    pub fn launch(self, args: &[String]) {
+        println!("DEBUG -- {:?}", args);
+
         let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
         let frame = Frame {};
 

@@ -6,7 +6,6 @@ use std::env;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    println!("{:?}", args);
     let vm = JVM::create();
-    vm.launch();
+    vm.launch(&args[1..]);
 }
