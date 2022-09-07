@@ -1,3 +1,4 @@
+use crate::classloader::ClassLoader;
 use crate::thread::Frame;
 
 pub struct JVM {}
@@ -27,8 +28,10 @@ impl JVM {
 
     pub fn launch(self, args: &[String]) {
         println!("DEBUG -- {:?}", args);
+        let classLoader = ClassLoader {};
+        let code = classLoader.loadClass(&args[0]);
 
-        let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
+        // let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
         let frame = Frame {};
 
         frame.invoke(code);

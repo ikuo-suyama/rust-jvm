@@ -1,3 +1,4 @@
+mod classloader;
 mod jvm;
 mod thread;
 
