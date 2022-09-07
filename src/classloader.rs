@@ -6,7 +6,8 @@ pub struct ClassLoader {}
 
 impl ClassLoader {
     pub fn load_class(self, _class_name: &String) -> Vec<u8> {
-        let class = match read_binary(_class_name) {
+        let filename = _class_name.to_owned() + ".class";
+        let class = match read_binary(filename) {
             Ok(class) => class,
             Err(_e) => panic!(
                 "Error: Can not find or read class {}\n Reason {}",
@@ -19,7 +20,7 @@ impl ClassLoader {
     }
 }
 
-fn read_binary(filename: &String) -> Result<Vec<u8>, io::Error> {
+fn read_binary(filename: String) -> Result<Vec<u8>, io::Error> {
     let mut file = File::open(&filename)?;
     let metadata = fs::metadata(&filename)?;
     let mut buffer = vec![0; metadata.len() as usize];
