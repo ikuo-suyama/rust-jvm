@@ -1,4 +1,4 @@
-use crate::binary::read_u32;
+use crate::binary::{read_binary_file, read_u32};
 use std::io::Cursor;
 
 #[derive(Default)]
@@ -50,10 +50,10 @@ impl ClassFile {
 
 #[test]
 fn test_parse_class() {
-    let bytes: &[u8] = &[0xCA, 0xFE, 0xBE, 0xBE];
+    // let bytes: &[u8] = &[0xCA, 0xFE, 0xBE, 0xBE];
+    let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
 
-    let result = ClassFile::parse_from(bytes);
+    let result = ClassFile::parse_from(binary.as_slice());
 
-    // assert_eq!(result.magic, 0xCAFEBEBE_u32)
-    assert_eq!(result.magic, 0xCAFEBEBE_u32);
+    assert_eq!(result.magic, 0xCAFEBABE_u32);
 }

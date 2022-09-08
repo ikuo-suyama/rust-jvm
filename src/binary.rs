@@ -1,4 +1,15 @@
+use std::fs::File;
 use std::io::{Cursor, Read};
+use std::{fs, io};
+
+pub fn read_binary_file(filename: &String) -> Result<Vec<u8>, io::Error> {
+    let mut file = File::open(&filename)?;
+    let metadata = fs::metadata(&filename)?;
+    let mut buffer = vec![0; metadata.len() as usize];
+    file.read(&mut buffer)?;
+
+    return Ok(buffer);
+}
 
 pub fn read_u8(cursor: &mut Cursor<&[u8]>) -> u8 {
     let buf: &mut [u8] = &mut [0; 1];
