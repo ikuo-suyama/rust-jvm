@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::{Cursor, Read};
 use std::{fs, io};
 
+use crate::java_class::ClassFile;
+
 pub struct ClassLoader {}
 
 impl ClassLoader {
