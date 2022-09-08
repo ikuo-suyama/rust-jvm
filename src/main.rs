@@ -1,3 +1,4 @@
+mod binary;
 mod class_loader;
 mod java_class;
 mod jvm;
