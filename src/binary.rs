@@ -1,12 +1,12 @@
 use std::io::{Cursor, Read};
 
-fn read_u8(cursor: &mut Cursor<&[u8]>) -> u8 {
+pub fn read_u8(cursor: &mut Cursor<&[u8]>) -> u8 {
     let buf: &mut [u8] = &mut [0; 1];
     cursor.read_exact(buf).unwrap();
     buf[0]
 }
 
-fn read_u16(cursor: &mut Cursor<&[u8]>) -> u16 {
+pub fn read_u16(cursor: &mut Cursor<&[u8]>) -> u16 {
     let buf: &mut [u8] = &mut [0; 2];
     cursor.read_exact(buf).unwrap();
     let left: u16 = buf[0] as u16;
@@ -14,7 +14,7 @@ fn read_u16(cursor: &mut Cursor<&[u8]>) -> u16 {
     (left << 8) + right
 }
 
-fn read_u32(cursor: &mut Cursor<&[u8]>) -> u32 {
+pub fn read_u32(cursor: &mut Cursor<&[u8]>) -> u32 {
     let buf: &mut [u8] = &mut [0; 4];
     cursor.read_exact(buf).unwrap();
     let mut result: u32 = buf[0] as u32;

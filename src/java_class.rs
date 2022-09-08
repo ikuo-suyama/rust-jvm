@@ -1,3 +1,4 @@
+use crate::binary::read_u32;
 use std::io::Cursor;
 
 #[derive(Default)]
@@ -25,7 +26,7 @@ pub struct ClassFile {
 impl ClassFile {
     pub fn parse_from(class: &[u8]) -> ClassFile {
         let mut cursor = Cursor::new(class);
-        let magic: u32;
+        let magic: u32 = read_u32(&mut cursor);
         let minor_version: u16;
         let major_version: u16;
         let constant_pool_count: u16;
@@ -41,7 +42,9 @@ impl ClassFile {
         let attributes_count: u16;
         // let attributes[attributes_count]: attribute_info;
 
-        ClassFile::default()
+        let mut class = ClassFile::default();
+        class.magic = magic;
+        class
     }
 }
 
@@ -52,5 +55,5 @@ fn test_parse_class() {
     let result = ClassFile::parse_from(bytes);
 
     // assert_eq!(result.magic, 0xCAFEBEBE_u32)
-    assert_eq!(result.magic, 0);
+    assert_eq!(result.magic, 0xCAFEBEBE_u32);
 }
