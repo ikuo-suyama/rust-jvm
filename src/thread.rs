@@ -92,5 +92,5 @@ fn test_invoke() {
 
     let result = frame.invoke(code);
 
-    assert!(result == 3);
+    assert_eq!(result, 3);
 }

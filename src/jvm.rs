@@ -1,4 +1,4 @@
-use crate::classloader::ClassLoader;
+use crate::class_loader::ClassLoader;
 use crate::thread::Frame;
 
 pub struct JVM {}

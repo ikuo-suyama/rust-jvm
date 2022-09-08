@@ -1,4 +1,4 @@
-mod classloader;
+mod class_loader;
 mod jvm;
 mod thread;
 
