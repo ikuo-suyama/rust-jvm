@@ -1,8 +1,8 @@
-use crate::binary::read_binary_file;
 use std::fs::File;
 use std::io::{Cursor, Read};
 use std::{fs, io};
 
+use crate::binary::read_binary_file;
 use crate::java_class::ClassFile;
 
 pub struct ClassLoader {}

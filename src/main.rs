@@ -1,5 +1,6 @@
 mod binary;
 mod class_loader;
+mod cp_info;
 mod java_class;
 mod jvm;
 mod thread;

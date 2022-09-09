@@ -1,4 +1,5 @@
 use crate::binary::{read_binary_file, read_u16, read_u32};
+use crate::cp_info::{parse_cp_info, CpInfo};
 use std::io::Cursor;
 
 #[derive(Default)]
@@ -9,7 +10,7 @@ pub struct ClassFile {
     pub minor_version: u16,
     pub major_version: u16,
     pub constant_pool_count: u16,
-    pub constant_pool: Vec<Box<dyn CpInfo>>,
+    pub constant_pool: Vec<CpInfo>,
     pub access_flags: u16,
     pub this_class: u16,
     pub super_class: u16,
@@ -23,22 +24,6 @@ pub struct ClassFile {
     // pub attributes[attributes_count]: attribute_info,
 }
 
-// TODO
-// https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html
-// should use enum instead of trait?
-pub trait CpInfo {
-    fn tag(&self) -> u8;
-}
-struct ConstantClassInfo {
-    pub tag: u8,
-    pub name_index: u16,
-}
-impl CpInfo for ConstantClassInfo {
-    fn tag(&self) -> u8 {
-        self.tag
-    }
-}
-
 impl ClassFile {
     pub fn parse_from(class: &[u8]) -> ClassFile {
         let mut cursor = Cursor::new(class);
@@ -46,7 +31,7 @@ impl ClassFile {
         let minor_version: u16 = read_u16(&mut cursor);
         let major_version: u16 = read_u16(&mut cursor);
         let constant_pool_count: u16 = read_u16(&mut cursor);
-        let constant_pool = parse_cp_info(&mut cursor);
+        let constant_pool = parse_cp_info(&mut cursor, constant_pool_count);
         let access_flags: u16 = read_u16(&mut cursor);
         let this_class: u16 = read_u16(&mut cursor);
         let super_class: u16 = read_u16(&mut cursor);
@@ -73,15 +58,6 @@ impl ClassFile {
     }
 }
 
-fn parse_cp_info(cursor: &mut Cursor<&[u8]>) -> Vec<Box<dyn CpInfo>> {
-    /// here we need a [Box](https://doc.rust-jp.rs/rust-by-example-ja/std/box.html)
-    /// to avoid "the trait `Sized` is not implemented for..."
-    vec![Box::new(ConstantClassInfo {
-        tag: 0,
-        name_index: 0,
-    })]
-}
-
 #[test]
 fn test_parse_class() {
     // let bytes: &[u8] = &[0xCA, 0xFE, 0xBE, 0xBE];
@@ -93,7 +69,10 @@ fn test_parse_class() {
     assert_eq!(result.minor_version, 0);
     assert_eq!(result.major_version, 61);
     assert_eq!(result.constant_pool_count, 31);
-    assert_eq!(result.constant_pool.get(0).unwrap().tag(), 0);
+    assert_eq!(
+        result.constant_pool.len(),
+        result.constant_pool_count as usize
+    );
     assert_eq!(result.access_flags, 2560);
     assert_eq!(result.this_class, 0x12_u16);
     assert_eq!(result.super_class, 0x12_u16);
