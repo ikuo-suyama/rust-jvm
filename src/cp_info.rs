@@ -26,16 +26,19 @@ fn parse_cp_info(cursor: &mut Cursor<&[u8]>) -> Vec<Box<dyn CpInfo>> {
 
 use std::io::Cursor;
 
-use crate::binary::{read_binary_file, read_u16, read_u32, read_u8};
+use crate::binary::{read_binary_file, read_string_to, read_u16, read_u32, read_u8};
 use crate::cp_info::CpInfo::{
     ConstantClassInfo, ConstantFieldref, ConstantInterfaceMethodRef, ConstantMethodRef,
+    ConstantNameAndType, ConstantUtf8,
 };
 
+#[derive(Debug)]
 pub enum CpInfo {
-    ConstantClassInfo {
-        tag: CP_TAGES,
-        name_index: u16,
-    },
+    /// ConstantPool Structures
+    /// [Ref](https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html)
+    ConstantClassInfo { tag: CP_TAGES, name_index: u16 },
+
+    // Field, Method, Interface
     ConstantFieldref {
         tag: CP_TAGES,
         class_index: u16,
@@ -50,6 +53,20 @@ pub enum CpInfo {
         tag: CP_TAGES,
         class_index: u16,
         name_and_type_index: u16,
+    },
+
+    // NameAndType
+    ConstantNameAndType {
+        tag: CP_TAGES,
+        name_index: u16,
+        descriptor_index: u16,
+    },
+
+    // Utf8
+    ConstantUtf8 {
+        tag: CP_TAGES,
+        length: u16,
+        bytes: String,
     },
 }
 
@@ -103,7 +120,7 @@ impl CP_TAGES {
 pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Vec<CpInfo> {
     let mut constant_pool: Vec<CpInfo> = vec![];
 
-    for i in 0..constant_pool_count {
+    for i in 1..constant_pool_count {
         let tag = CP_TAGES::from_u8(read_u8(cursor));
         let cp_info = match tag {
             CP_TAGES::CONSTANT_Class => ConstantClassInfo {
@@ -127,12 +144,30 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
+
+            // NameAndType
+            CP_TAGES::CONSTANT_NameAndType => ConstantNameAndType {
+                tag,
+                name_index: read_u16(cursor),
+                descriptor_index: read_u16(cursor),
+            },
+
+            // Utf8
+            CP_TAGES::CONSTANT_Utf8 => {
+                let length = read_u16(cursor);
+                ConstantUtf8 {
+                    tag,
+                    length,
+                    bytes: read_string_to(cursor, length as usize),
+                }
+            }
             _ => panic!(
                 "#{} the Constant Pool {:?} is not implement yet",
                 i + 1,
                 tag
             ),
         };
+        println!("[DEBUG] -- Load CP: #{} = {:?}", i, cp_info);
         constant_pool.push(cp_info);
     }
 
@@ -151,5 +186,5 @@ fn test_parse_cp_info() {
     let constant_pool_count = read_u16(&mut cursor);
 
     let result = parse_cp_info(&mut cursor, constant_pool_count);
-    assert_eq!(result.len(), constant_pool_count as usize);
+    assert_eq!(result.len(), (constant_pool_count - 1) as usize);
 }

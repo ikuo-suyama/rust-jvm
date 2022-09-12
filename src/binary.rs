@@ -41,6 +41,12 @@ pub fn read_u32(cursor: &mut Cursor<&[u8]>) -> u32 {
     result
 }
 
+pub fn read_string_to(cursor: &mut Cursor<&[u8]>, length: usize) -> String {
+    let buf: &mut [u8] = &mut vec![0; length];
+    cursor.read_exact(buf).unwrap();
+    std::str::from_utf8(buf).unwrap().to_string()
+}
+
 #[test]
 fn test_read_u8() {
     let bytes: &[u8] = &[0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
@@ -75,4 +81,18 @@ fn test_read_u32() {
 
     assert_eq!(result, 0x3D1B1C60_u32);
     assert_eq!(cursor.position(), 7);
+}
+
+#[test]
+fn test_read_string() {
+    let bytes: &[u8] = &[
+        0x6A, 0x61, 0x76, 0x61, 0x2F, 0x6C, 0x61, 0x6E, 0x67, 0x2F, 0x4F, 0x62, 0x6A, 0x65, 0x63,
+        0x74,
+    ];
+
+    let mut cursor = Cursor::new(bytes);
+
+    let result = read_string_to(&mut cursor, bytes.len());
+
+    assert_eq!(result, "java/lang/Object");
 }
