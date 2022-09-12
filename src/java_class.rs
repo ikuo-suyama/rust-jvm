@@ -1,4 +1,4 @@
-use crate::binary::{read_binary_file, read_u16, read_u32};
+use crate::binary::{read_binary_file, read_to, read_u16, read_u32};
 use crate::cp_info::{parse_cp_info, CpInfo};
 use std::io::Cursor;
 
@@ -134,7 +134,7 @@ fn parse_attribute_info(cursor: &mut Cursor<&[u8]>) -> AttributeInfo {
     AttributeInfo {
         attribute_name_index,
         attribute_length,
-        info: vec![],
+        info: read_to(cursor, attribute_length as usize),
     }
 }
 
@@ -152,6 +152,7 @@ fn test_parse_attribute_info() {
 
     assert_eq!(result.attribute_name_index, 0x0019);
     assert_eq!(result.attribute_length, 0x00000026);
+    assert_eq!(result.info.len(), result.attribute_length as usize);
 }
 
 #[test]
