@@ -48,24 +48,24 @@ impl ClassFile {
         let attributes_count: u16 = read_u16(&mut cursor);
         let attributes = parse_attributes(&mut cursor, attributes_count);
 
-        let mut class = ClassFile::default();
-        class.magic = magic;
-        class.minor_version = minor_version;
-        class.major_version = major_version;
-        class.constant_pool_count = constant_pool_count;
-        class.constant_pool = constant_pool;
-        class.access_flags = access_flags;
-        class.this_class = this_class;
-        class.super_class = super_class;
-        class.interfaces_count = interfaces_count;
-        class.interfaces = interfaces;
-        class.fields_count = fields_count;
-        class.fields = fields;
-        class.methods_count = methods_count;
-        class.methods = methods;
-        class.attributes_count = attributes_count;
-        class.attributes = attributes;
-        class
+        ClassFile {
+            magic,
+            minor_version,
+            major_version,
+            constant_pool_count,
+            constant_pool,
+            access_flags,
+            this_class,
+            super_class,
+            interfaces_count,
+            interfaces,
+            fields_count,
+            fields,
+            methods_count,
+            methods,
+            attributes_count,
+            attributes,
+        }
     }
 }
 
