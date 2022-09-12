@@ -15,7 +15,7 @@ pub struct ClassFile {
     pub this_class: u16,
     pub super_class: u16,
     pub interfaces_count: u16,
-    // pub interfaces[interfaces_count]: u16,
+    pub interfaces: Vec<u16>,
     pub fields_count: u16,
     // pub fields[fields_count]: field_info,
     pub methods_count: u16,
@@ -36,7 +36,7 @@ impl ClassFile {
         let this_class: u16 = read_u16(&mut cursor);
         let super_class: u16 = read_u16(&mut cursor);
         let interfaces_count: u16 = read_u16(&mut cursor);
-        // let interfaces[interfaces_count]: u16;
+        let interfaces = parse_interfaces(&mut cursor, interfaces_count);
         let fields_count: u16;
         // let fields[fields_count]: field_info;
         let methods_count: u16;
@@ -58,6 +58,14 @@ impl ClassFile {
     }
 }
 
+fn parse_interfaces(cursur: &mut Cursor<&[u8]>, interface_count: u16) -> Vec<u16> {
+    let mut interfaces: Vec<u16> = vec![0];
+    for _ in 0..interface_count {
+        interfaces.push(read_u16(cursur));
+    }
+    interfaces
+}
+
 #[test]
 fn test_parse_class() {
     // let bytes: &[u8] = &[0xCA, 0xFE, 0xBE, 0xBE];
@@ -71,10 +79,11 @@ fn test_parse_class() {
     assert_eq!(result.constant_pool_count, 31);
     assert_eq!(
         result.constant_pool.len(),
-        result.constant_pool_count as usize
+        (result.constant_pool_count - 1) as usize
     );
-    assert_eq!(result.access_flags, 2560);
-    assert_eq!(result.this_class, 0x12_u16);
-    assert_eq!(result.super_class, 0x12_u16);
-    assert_eq!(result.interfaces_count, 0x12_u16);
+    assert_eq!(result.access_flags, 0x21);
+    assert_eq!(result.this_class, 14_u16);
+    assert_eq!(result.super_class, 02_u16);
+    assert_eq!(result.interfaces_count, 0);
+    assert_eq!(result.interfaces.len(), result.interfaces_count as usize)
 }
