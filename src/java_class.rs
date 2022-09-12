@@ -96,10 +96,27 @@ pub struct AttributeInfo {
 }
 
 fn parse_fields(cursor: &mut Cursor<&[u8]>, fields_count: u16) -> Vec<FieldInfo> {
-    if fields_count > 1 {
-        panic!("fileds are not implemented yet");
+    let mut fields: Vec<FieldInfo> = vec![];
+    for _ in 0..fields_count {
+        fields.push(parse_field(cursor))
     }
-    vec![]
+    fields
+}
+
+fn parse_field(cursor: &mut Cursor<&[u8]>) -> FieldInfo {
+    let access_flags: u16 = read_u16(cursor);
+    let name_index: u16 = read_u16(cursor);
+    let descriptor_index: u16 = read_u16(cursor);
+    let attributes_count: u16 = read_u16(cursor);
+    let attributes = parse_attributes(cursor, attributes_count);
+
+    FieldInfo {
+        access_flags,
+        name_index,
+        descriptor_index,
+        attributes_count,
+        attributes,
+    }
 }
 
 fn parse_methods(cursor: &mut Cursor<&[u8]>, methods_count: u16) -> Vec<MethodInfo> {
