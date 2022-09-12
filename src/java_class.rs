@@ -17,7 +17,7 @@ pub struct ClassFile {
     pub interfaces_count: u16,
     pub interfaces: Vec<u16>,
     pub fields_count: u16,
-    // pub fields[fields_count]: field_info,
+    pub fields: Vec<FieldInfo>,
     pub methods_count: u16,
     // pub methods[methods_count]: method_info,
     pub attributes_count: u16,
@@ -37,8 +37,8 @@ impl ClassFile {
         let super_class: u16 = read_u16(&mut cursor);
         let interfaces_count: u16 = read_u16(&mut cursor);
         let interfaces = parse_interfaces(&mut cursor, interfaces_count);
-        let fields_count: u16;
-        // let fields[fields_count]: field_info;
+        let fields_count: u16 = read_u16(&mut cursor);
+        let fields = parse_fields(&mut cursor, fields_count);
         let methods_count: u16;
         // let methods[methods_count]: method_info;
         let attributes_count: u16;
@@ -54,16 +54,40 @@ impl ClassFile {
         class.this_class = this_class;
         class.super_class = super_class;
         class.interfaces_count = interfaces_count;
+        class.interfaces = interfaces;
+        class.fields_count = fields_count;
+        class.fields = fields;
         class
     }
 }
 
 fn parse_interfaces(cursur: &mut Cursor<&[u8]>, interface_count: u16) -> Vec<u16> {
-    let mut interfaces: Vec<u16> = vec![0];
+    let mut interfaces: Vec<u16> = vec![];
     for _ in 0..interface_count {
         interfaces.push(read_u16(cursur));
     }
     interfaces
+}
+
+pub struct FieldInfo {
+    access_flags: u16,
+    name_index: u16,
+    descriptor_index: u16,
+    attributes_count: u16,
+    attributes: Vec<AttributeInfo>,
+}
+
+pub struct AttributeInfo {
+    attribute_name_index: u16,
+    attribute_length: u32,
+    info: Vec<u8>,
+}
+
+fn parse_fields(cursur: &mut Cursor<&[u8]>, fields_count: u16) -> Vec<FieldInfo> {
+    if fields_count > 1 {
+        panic!("fileds are not implemented yet");
+    }
+    vec![]
 }
 
 #[test]
@@ -85,5 +109,7 @@ fn test_parse_class() {
     assert_eq!(result.this_class, 14_u16);
     assert_eq!(result.super_class, 02_u16);
     assert_eq!(result.interfaces_count, 0);
-    assert_eq!(result.interfaces.len(), result.interfaces_count as usize)
+    assert_eq!(result.interfaces.len(), result.interfaces_count as usize);
+    assert_eq!(result.fields_count, 0);
+    assert_eq!(result.fields.len(), result.fields_count as usize);
 }
