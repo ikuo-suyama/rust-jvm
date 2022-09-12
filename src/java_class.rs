@@ -19,9 +19,9 @@ pub struct ClassFile {
     pub fields_count: u16,
     pub fields: Vec<FieldInfo>,
     pub methods_count: u16,
-    // pub methods[methods_count]: method_info,
+    pub methods: Vec<MethodInfo>,
     pub attributes_count: u16,
-    // pub attributes[attributes_count]: attribute_info,
+    pub attributes: Vec<AttributeInfo>,
 }
 
 impl ClassFile {
@@ -40,9 +40,9 @@ impl ClassFile {
         let fields_count: u16 = read_u16(&mut cursor);
         let fields = parse_fields(&mut cursor, fields_count);
         let methods_count: u16 = read_u16(&mut cursor);
-        // let methods[methods_count]: method_info;
-        let attributes_count: u16;
-        // let attributes[attributes_count]: attribute_info;
+        let methods = parse_methods(&mut cursor, methods_count);
+        let attributes_count: u16 = read_u16(&mut cursor);
+        let attributes = parse_attributes(&mut cursor, attributes_count);
 
         let mut class = ClassFile::default();
         class.magic = magic;
@@ -57,6 +57,10 @@ impl ClassFile {
         class.interfaces = interfaces;
         class.fields_count = fields_count;
         class.fields = fields;
+        class.methods_count = methods_count;
+        class.methods = methods;
+        class.attributes_count = attributes_count;
+        class.attributes = attributes;
         class
     }
 }
@@ -100,7 +104,9 @@ fn parse_fields(cursor: &mut Cursor<&[u8]>, fields_count: u16) -> Vec<FieldInfo>
 
 fn parse_methods(cursor: &mut Cursor<&[u8]>, methods_count: u16) -> Vec<MethodInfo> {
     let mut methods: Vec<MethodInfo> = vec![];
-    for _ in 0..methods_count {}
+    for _ in 0..methods_count {
+        methods.push(parse_method(cursor))
+    }
     methods
 }
 
@@ -198,4 +204,10 @@ fn test_parse_class() {
 
     assert_eq!(result.fields_count, 0);
     assert_eq!(result.fields.len(), result.fields_count as usize);
+
+    assert_eq!(result.methods_count, 3);
+    assert_eq!(result.methods.len(), result.methods_count as usize);
+
+    assert_eq!(result.attributes_count, 1);
+    assert_eq!(result.attributes.len(), result.attributes_count as usize);
 }
