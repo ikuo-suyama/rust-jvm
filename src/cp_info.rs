@@ -27,10 +27,30 @@ fn parse_cp_info(cursor: &mut Cursor<&[u8]>) -> Vec<Box<dyn CpInfo>> {
 use std::io::Cursor;
 
 use crate::binary::{read_binary_file, read_u16, read_u32, read_u8};
-use crate::cp_info::CpInfo::ConstantClassInfo;
+use crate::cp_info::CpInfo::{
+    ConstantClassInfo, ConstantFieldref, ConstantInterfaceMethodRef, ConstantMethodRef,
+};
 
 pub enum CpInfo {
-    ConstantClassInfo { tag: CP_TAGES, name_index: u16 },
+    ConstantClassInfo {
+        tag: CP_TAGES,
+        name_index: u16,
+    },
+    ConstantFieldref {
+        tag: CP_TAGES,
+        class_index: u16,
+        name_and_type_index: u16,
+    },
+    ConstantMethodRef {
+        tag: CP_TAGES,
+        class_index: u16,
+        name_and_type_index: u16,
+    },
+    ConstantInterfaceMethodRef {
+        tag: CP_TAGES,
+        class_index: u16,
+        name_and_type_index: u16,
+    },
 }
 
 #[allow(non_camel_case_types)]
@@ -90,7 +110,28 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
                 tag,
                 name_index: read_u16(cursor),
             },
-            _ => panic!("#{} the Constant Pool {:?} is not implement yet", i, tag),
+
+            // Method, Filed, Interface
+            CP_TAGES::CONSTANT_Methodref => ConstantMethodRef {
+                tag,
+                class_index: read_u16(cursor),
+                name_and_type_index: read_u16(cursor),
+            },
+            CP_TAGES::CONSTANT_Fieldref => ConstantFieldref {
+                tag,
+                class_index: read_u16(cursor),
+                name_and_type_index: read_u16(cursor),
+            },
+            CP_TAGES::CONSTANT_InterfaceMethodref => ConstantInterfaceMethodRef {
+                tag,
+                class_index: read_u16(cursor),
+                name_and_type_index: read_u16(cursor),
+            },
+            _ => panic!(
+                "#{} the Constant Pool {:?} is not implement yet",
+                i + 1,
+                tag
+            ),
         };
         constant_pool.push(cp_info);
     }
