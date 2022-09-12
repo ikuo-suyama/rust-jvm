@@ -1,3 +1,5 @@
+extern crate core;
+
 mod binary;
 mod class_loader;
 mod cp_info;
