@@ -1,5 +1,5 @@
-use std::cell::Cell;
-use std::cell::RefCell;
+// use std::cell::Cell;
+// use std::cell::RefCell;
 
 // Instructions
 const ICONST_1: u8 = 0x04;
@@ -92,5 +92,5 @@ fn test_invoke() {
 
     let result = frame.invoke(code);
 
-    assert!(result == 3);
+    assert_eq!(result, 3);
 }
