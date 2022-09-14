@@ -29,8 +29,8 @@ pub struct ClassFile {
 }
 
 impl ClassFile {
-    pub fn parse_from(class: &[u8]) -> ClassFile {
-        let mut cursor = Cursor::new(class);
+    pub fn parse_from(binary: &[u8]) -> ClassFile {
+        let mut cursor = Cursor::new(binary);
         let magic: u32 = read_u32(&mut cursor);
         let minor_version: u16 = read_u16(&mut cursor);
         let major_version: u16 = read_u16(&mut cursor);
