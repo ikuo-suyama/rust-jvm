@@ -68,6 +68,24 @@ impl ClassFile {
             attributes,
         }
     }
+
+    pub fn constant_pool_value_at(self, index: u16) -> String {
+        self.constant_pool
+            .get((index - 1) as usize)
+            .map(|cp| match cp {
+                CpInfo::ConstantUtf8 { tag, length, bytes } => bytes,
+                _ => todo!("not implemented yet!!"),
+            })
+            .expect(
+                format!(
+                    "index out of bounds for constant pool: length {} index {}",
+                    self.constant_pool.len(),
+                    index + 1
+                )
+                .as_str(),
+            )
+            .clone()
+    }
 }
 
 #[test]
@@ -100,4 +118,14 @@ fn test_parse_class() {
 
     assert_eq!(result.attributes_count, 1);
     assert_eq!(result.attributes.len(), result.attributes_count as usize);
+}
+
+#[test]
+fn test_constant_pool_value_at() {
+    let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
+    let class_file = ClassFile::parse_from(binary.as_slice());
+
+    let result = class_file.constant_pool_value_at(30);
+
+    assert_eq!(result, "SimpleSum.java");
 }

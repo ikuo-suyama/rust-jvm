@@ -8,7 +8,7 @@ pub struct ClassLoader {}
 impl ClassLoader {
     pub fn load_class<'a>(
         self,
-        native_area: &'a mut HashMap<String, Class>,
+        method_area: &'a mut HashMap<String, Class>,
         class_name: &String,
     ) -> &'a Class {
         let filename = class_name.to_owned() + ".class";
@@ -24,8 +24,21 @@ impl ClassLoader {
         // too messy, turn on when only needed...
         // println!("{:#?}", class_file);
 
-        let class = Class::createFrom(class_file);
-        native_area.insert("test_key".to_owned(), class);
-        native_area.get("test_key").unwrap()
+        let class = create_class_from(class_file);
+        register_method_area(method_area, class)
+    }
+}
+
+fn register_method_area(method_area: &mut HashMap<String, Class>, class: Class) -> &Class {
+    let descriptor = class.descriptor.clone();
+    method_area.insert(descriptor.clone(), class);
+    method_area.get(&*descriptor).unwrap()
+}
+
+fn create_class_from(class_file: ClassFile) -> Class {
+    Class {
+        descriptor: "".to_string(),
+        methods: Default::default(),
+        fields: Default::default(),
     }
 }

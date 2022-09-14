@@ -40,6 +40,7 @@ impl JVM {
         println!("[DEBUG] -- {:?}", args);
 
         let class = self.boot_loader.load_class(&mut self.method_area, &args[0]);
+        println!("{:#?}", class);
 
         let code = find_main(class);
 
