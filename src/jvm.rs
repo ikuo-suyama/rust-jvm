@@ -1,6 +1,7 @@
+use crate::class::Class;
 use crate::class_attributes::{FieldInfo, MethodInfo};
 use crate::class_loader::ClassLoader;
-use crate::java_class::{Class, ClassFile};
+use crate::java_class::ClassFile;
 use crate::thread::Frame;
 use std::collections::HashMap;
 

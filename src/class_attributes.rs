@@ -1,6 +1,7 @@
 use crate::binary::{read_to, read_u16, read_u32};
 use std::io::Cursor;
 
+#[derive(Debug)]
 pub struct FieldInfo {
     access_flags: u16,
     name_index: u16,
@@ -9,6 +10,7 @@ pub struct FieldInfo {
     attributes: Vec<AttributeInfo>,
 }
 
+#[derive(Debug)]
 pub struct MethodInfo {
     access_flags: u16,
     name_index: u16,
@@ -17,6 +19,7 @@ pub struct MethodInfo {
     attributes: Vec<AttributeInfo>,
 }
 
+#[derive(Debug)]
 pub struct AttributeInfo {
     attribute_name_index: u16,
     attribute_length: u32,

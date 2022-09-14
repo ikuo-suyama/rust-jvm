@@ -1,5 +1,5 @@
 use crate::binary::read_binary_file;
-use crate::java_class::Class;
+use crate::class::Class;
 use crate::java_class::ClassFile;
 use std::collections::HashMap;
 
@@ -21,6 +21,9 @@ impl ClassLoader {
         };
 
         let class_file = ClassFile::parse_from(binary.as_slice());
+        // too messy, turn on when only needed...
+        // println!("{:#?}", class_file);
+
         let class = Class::createFrom(class_file);
         native_area.insert("test_key".to_owned(), class);
         native_area.get("test_key").unwrap()
