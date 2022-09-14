@@ -30,7 +30,7 @@ impl Frame {
 
         let result = loop {
             let instruction = code[pc];
-            println!("DEBUG -- pc: {} instruction: {:#04x}", pc, instruction);
+            println!("[DEBUG] -- pc: {} instruction: {:#04x}", pc, instruction);
             match instruction {
                 ICONST_1 => {
                     operand_stack.push(1);

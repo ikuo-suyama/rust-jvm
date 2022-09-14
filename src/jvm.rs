@@ -1,26 +1,12 @@
 use crate::class_attributes::{FieldInfo, MethodInfo};
 use crate::class_loader::ClassLoader;
-use crate::java_class::ClassFile;
+use crate::java_class::{Class, ClassFile};
 use crate::thread::Frame;
 use std::collections::HashMap;
 
 pub struct JVM {
     method_area: HashMap<String, Class>,
     boot_loader: ClassLoader,
-}
-
-pub struct Class {
-    methods: HashMap<String, MethodInfo>,
-    fields: HashMap<String, FieldInfo>,
-}
-
-impl Class {
-    fn createFrom(class_file: ClassFile) -> Class {
-        Class {
-            methods: HashMap::new(),
-            fields: HashMap::new(),
-        }
-    }
 }
 
 /// The first primitive JVM. A simple instruction interpreter.
@@ -50,15 +36,17 @@ impl JVM {
     }
 
     pub fn launch(mut self, args: &[String]) {
-        println!("DEBUG -- {:?}", args);
+        println!("[DEBUG] -- {:?}", args);
 
-        let class_file = self.boot_loader.load_class(&args[0]);
-        let class = Class::createFrom(class_file);
+        let class = self.boot_loader.load_class(&mut self.method_area, &args[0]);
 
-        let code = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
+        let code = find_main(class);
 
         let frame = Frame {};
-
         frame.invoke(code);
     }
+}
+
+fn find_main(class: &Class) -> Vec<u8> {
+    vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC]
 }

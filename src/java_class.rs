@@ -4,6 +4,7 @@ use crate::class_attributes::{
     MethodInfo,
 };
 use crate::cp_info::{parse_cp_info, CpInfo};
+use std::collections::HashMap;
 use std::io::Cursor;
 
 #[derive(Default)]
@@ -99,4 +100,18 @@ fn test_parse_class() {
 
     assert_eq!(result.attributes_count, 1);
     assert_eq!(result.attributes.len(), result.attributes_count as usize);
+}
+
+pub struct Class {
+    pub methods: HashMap<String, MethodInfo>,
+    pub fields: HashMap<String, FieldInfo>,
+}
+
+impl Class {
+    pub(crate) fn createFrom(class_file: ClassFile) -> Class {
+        Class {
+            methods: HashMap::new(),
+            fields: HashMap::new(),
+        }
+    }
 }
