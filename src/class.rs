@@ -1,5 +1,5 @@
 use crate::class_attributes::{FieldInfo, MethodInfo};
-use crate::java_class::ClassFile;
+use crate::class_file::ClassFile;
 use std::collections::HashMap;
 
 pub struct Class {
