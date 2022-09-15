@@ -78,7 +78,7 @@ impl ClassFile {
             panic!(
                 "index out of bounds for constant pool: length {} index {}",
                 self.constant_pool.len(),
-                index + 1
+                index
             )
         };
 
@@ -131,4 +131,13 @@ fn test_constant_pool_value_at() {
     let result = class_file.constant_pool_value_at(30);
 
     assert_eq!(result, "SimpleSum.java");
+}
+
+#[test]
+#[should_panic]
+fn test_constant_pool_value_obe() {
+    let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
+    let class_file = ClassFile::parse_from(binary.as_slice());
+
+    let _ = class_file.constant_pool_value_at(31);
 }
