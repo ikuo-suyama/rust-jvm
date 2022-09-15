@@ -70,21 +70,24 @@ impl ClassFile {
     }
 
     pub fn constant_pool_value_at(self, index: u16) -> String {
-        self.constant_pool
-            .get((index - 1) as usize)
-            .map(|cp| match cp {
-                CpInfo::ConstantUtf8 { tag, length, bytes } => bytes,
-                _ => todo!("not implemented yet!!"),
-            })
-            .expect(
-                format!(
-                    "index out of bounds for constant pool: length {} index {}",
-                    self.constant_pool.len(),
-                    index + 1
-                )
-                .as_str(),
+        let parse_cp_value = |cp: &CpInfo| match cp {
+            CpInfo::ConstantUtf8 { tag, length, bytes } => bytes.clone(),
+            _ => todo!("not implemented yet!!"),
+        };
+        let cp_not_found_error = |index: u16| {
+            panic!(
+                "index out of bounds for constant pool: length {} index {}",
+                self.constant_pool.len(),
+                index + 1
             )
-            .clone()
+        };
+
+        let maybe_cp = self.constant_pool.get((index - 1) as usize);
+        let value = match maybe_cp {
+            Some(cp) => parse_cp_value(cp),
+            None => cp_not_found_error(index),
+        };
+        value
     }
 }
 
