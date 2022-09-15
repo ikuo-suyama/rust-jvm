@@ -20,10 +20,12 @@ pub struct MethodInfo {
 }
 
 #[derive(Debug)]
-pub struct AttributeInfo {
-    attribute_name_index: u16,
-    attribute_length: u32,
-    info: Vec<u8>,
+pub enum AttributeInfo {
+    GeneralAttributeInfo {
+        attribute_name_index: u16,
+        attribute_length: u32,
+        info: Vec<u8>,
+    },
 }
 
 pub fn parse_interfaces(cursur: &mut Cursor<&[u8]>, interface_count: u16) -> Vec<u16> {
@@ -93,7 +95,7 @@ pub fn parse_attributes(cursor: &mut Cursor<&[u8]>, attributes_count: u16) -> Ve
 fn parse_attribute_info(cursor: &mut Cursor<&[u8]>) -> AttributeInfo {
     let attribute_name_index = read_u16(cursor);
     let attribute_length = read_u32(cursor);
-    AttributeInfo {
+    AttributeInfo::GeneralAttributeInfo {
         attribute_name_index,
         attribute_length,
         info: read_to(cursor, attribute_length as usize),
@@ -111,10 +113,17 @@ fn test_parse_attribute_info() {
     let mut cursor = Cursor::new(bytes);
 
     let result = parse_attribute_info(&mut cursor);
-
-    assert_eq!(result.attribute_name_index, 0x0019);
-    assert_eq!(result.attribute_length, 0x00000026);
-    assert_eq!(result.info.len(), result.attribute_length as usize);
+    match result {
+        AttributeInfo::GeneralAttributeInfo {
+            attribute_name_index,
+            attribute_length,
+            info,
+        } => {
+            assert_eq!(attribute_name_index, 0x0019);
+            assert_eq!(attribute_length, 0x00000026);
+            assert_eq!(info.len(), attribute_length as usize);
+        }
+    }
 }
 
 #[test]
