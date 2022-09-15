@@ -28,10 +28,6 @@ use std::io::Cursor;
 
 use crate::binary::{read_binary_file, read_string_to, read_u16, read_u32, read_u8};
 use crate::class_file::ClassFile;
-use crate::cp_info::CpInfo::{
-    ConstantClassInfo, ConstantFieldref, ConstantInterfaceMethodRef, ConstantMethodRef,
-    ConstantNameAndType, ConstantUtf8,
-};
 
 #[derive(Debug)]
 pub enum CpInfo {
@@ -124,30 +120,30 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
     for i in 1..constant_pool_count {
         let tag = CP_TAGES::from_u8(read_u8(cursor));
         let cp_info = match tag {
-            CP_TAGES::CONSTANT_Class => ConstantClassInfo {
+            CP_TAGES::CONSTANT_Class => CpInfo::ConstantClassInfo {
                 tag,
                 name_index: read_u16(cursor),
             },
 
             // Method, Filed, Interface
-            CP_TAGES::CONSTANT_Methodref => ConstantMethodRef {
+            CP_TAGES::CONSTANT_Methodref => CpInfo::ConstantMethodRef {
                 tag,
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
-            CP_TAGES::CONSTANT_Fieldref => ConstantFieldref {
+            CP_TAGES::CONSTANT_Fieldref => CpInfo::ConstantFieldref {
                 tag,
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
-            CP_TAGES::CONSTANT_InterfaceMethodref => ConstantInterfaceMethodRef {
+            CP_TAGES::CONSTANT_InterfaceMethodref => CpInfo::ConstantInterfaceMethodRef {
                 tag,
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
 
             // NameAndType
-            CP_TAGES::CONSTANT_NameAndType => ConstantNameAndType {
+            CP_TAGES::CONSTANT_NameAndType => CpInfo::ConstantNameAndType {
                 tag,
                 name_index: read_u16(cursor),
                 descriptor_index: read_u16(cursor),
@@ -156,7 +152,7 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
             // Utf8
             CP_TAGES::CONSTANT_Utf8 => {
                 let length = read_u16(cursor);
-                ConstantUtf8 {
+                CpInfo::ConstantUtf8 {
                     tag,
                     length,
                     bytes: read_string_to(cursor, length as usize),
