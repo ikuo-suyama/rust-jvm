@@ -69,9 +69,39 @@ impl ClassFile {
         }
     }
 
-    pub fn constant_pool_value_at(self, index: u16) -> String {
+    pub fn constant_pool_value_at(&self, index: u16) -> String {
         let parse_cp_value = |cp: &CpInfo| match cp {
             CpInfo::ConstantUtf8 { tag, length, bytes } => bytes.clone(),
+            CpInfo::ConstantClassInfo { tag, name_index } => {
+                self.constant_pool_value_at(name_index.clone())
+            }
+            CpInfo::ConstantNameAndType {
+                tag,
+                name_index,
+                descriptor_index,
+            } => {
+                let name = self.constant_pool_value_at(name_index.clone());
+                let desc = self.constant_pool_value_at(descriptor_index.clone());
+                format!("{}:{}", name, desc)
+            }
+            CpInfo::ConstantMethodRef {
+                tag,
+                class_index,
+                name_and_type_index,
+            } => {
+                let class = self.constant_pool_value_at(class_index.clone());
+                let nt = self.constant_pool_value_at(name_and_type_index.clone());
+                format!("{}.{}", class, nt)
+            }
+            CpInfo::ConstantFieldref {
+                tag,
+                class_index,
+                name_and_type_index,
+            } => {
+                let class = self.constant_pool_value_at(class_index.clone());
+                let nt = self.constant_pool_value_at(name_and_type_index.clone());
+                format!("{}.{}", class, nt)
+            }
             _ => todo!("not implemented yet!!"),
         };
         let cp_not_found_error = |index: u16| {
@@ -128,9 +158,21 @@ fn test_constant_pool_value_at() {
     let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
     let class_file = ClassFile::parse_from(binary.as_slice());
 
-    let result = class_file.constant_pool_value_at(30);
+    // for cp index, see @sampleSum.jvm file
+    let utf8 = class_file.constant_pool_value_at(30);
+    assert_eq!(utf8, "SimpleSum.java");
 
-    assert_eq!(result, "SimpleSum.java");
+    let class = class_file.constant_pool_value_at(2);
+    assert_eq!(class, "java/lang/Object");
+
+    let name_and_type = class_file.constant_pool_value_at(3);
+    assert_eq!(name_and_type, "<init>:()V");
+
+    let method_ref = class_file.constant_pool_value_at(1);
+    assert_eq!(method_ref, "java/lang/Object.<init>:()V");
+
+    let field_ref = class_file.constant_pool_value_at(7);
+    assert_eq!(field_ref, "java/lang/System.out:Ljava/io/PrintStream;");
 }
 
 #[test]
