@@ -1,6 +1,7 @@
 use crate::binary::read_binary_file;
 use crate::class::Class;
 use crate::class_file::ClassFile;
+use crate::cp_info::constant_pool_value_at;
 use std::collections::HashMap;
 
 pub struct ClassLoader {}
@@ -36,9 +37,28 @@ fn register_method_area(method_area: &mut HashMap<String, Class>, class: Class) 
 }
 
 fn create_class_from(class_file: ClassFile) -> Class {
+    let descriptor = constant_pool_value_at(&class_file.constant_pool, class_file.this_class);
+
+    let mut methods = HashMap::new();
+    for method in class_file.methods {
+        let method_name = constant_pool_value_at(&class_file.constant_pool, method.name_index);
+        let method_descriptor =
+            constant_pool_value_at(&class_file.constant_pool, method.descriptor_index);
+        let method_id = format!("{}:{}", method_name, method_descriptor);
+        methods.insert(method_id, method);
+    }
+
+    let mut fields = HashMap::new();
+    for field in class_file.fields {
+        let field_name = constant_pool_value_at(&class_file.constant_pool, field.name_index);
+        let field_descriptor =
+            constant_pool_value_at(&class_file.constant_pool, field.descriptor_index);
+        let field_id = format!("{}:{}", field_name, field_descriptor);
+        fields.insert(field_name, field);
+    }
     Class {
-        descriptor: "".to_string(),
-        methods: Default::default(),
-        fields: Default::default(),
+        descriptor,
+        methods,
+        fields,
     }
 }

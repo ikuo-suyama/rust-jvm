@@ -40,7 +40,7 @@ impl JVM {
         println!("[DEBUG] -- {:?}", args);
 
         let class = self.boot_loader.load_class(&mut self.method_area, &args[0]);
-        println!("{:#?}", class);
+        // println!("[DEBUG] -- {:#?}", class);
 
         let code = find_main(class);
 
@@ -49,6 +49,11 @@ impl JVM {
     }
 }
 
+static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
+
 fn find_main(class: &Class) -> Vec<u8> {
-    vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC]
+    match class.methods.get(MAIN_METHOD_NAME_DESCRIPTOR) {
+        Some(method) => vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC],
+        None => panic!("main not found"),
+    }
 }
