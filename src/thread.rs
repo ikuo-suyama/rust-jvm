@@ -23,7 +23,7 @@ const IRETURN: u8 = 0xAC;
 pub struct Frame {}
 
 impl Frame {
-    pub fn invoke(&self, code: Vec<u8>) -> u8 {
+    pub fn invoke(&self, code: &Vec<u8>) -> u8 {
         let mut pc = 0;
         let mut local_variable: Vec<u8> = vec![0, 0, 0];
         let mut operand_stack: Vec<u8> = Vec::new();
@@ -90,7 +90,7 @@ fn test_invoke() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
     let frame = Frame {};
 
-    let result = frame.invoke(code);
+    let result = frame.invoke(&code);
 
     assert_eq!(result, 3);
 }

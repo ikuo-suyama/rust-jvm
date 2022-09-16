@@ -1,5 +1,5 @@
 use crate::class::Class;
-use crate::class_attributes::{FieldInfo, MethodInfo};
+use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
 use crate::class_file::ClassFile;
 use crate::class_loader::ClassLoader;
 use crate::thread::Frame;
@@ -49,11 +49,16 @@ impl JVM {
     }
 }
 
-static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
+// static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
+/// fetch target method as main for now
+static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
 
-fn find_main(class: &Class) -> Vec<u8> {
+fn find_main(class: &Class) -> &Vec<u8> {
     match class.methods.get(MAIN_METHOD_NAME_DESCRIPTOR) {
-        Some(method) => vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC],
+        Some(method) => match method.attributes.get(0).unwrap() {
+            AttributeInfo::CodeAttributeInfo { code, .. } => code,
+            _ => panic!("code not found"),
+        },
         None => panic!("main not found"),
     }
 }
