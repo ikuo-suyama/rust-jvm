@@ -25,11 +25,31 @@ pub struct MethodInfo {
 
 #[derive(Debug)]
 pub enum AttributeInfo {
+    CodeAttributeInfo {
+        attribute_name_index: u16,
+        attribute_length: u32,
+        max_stack: u16,
+        max_locals: u16,
+        code_length: u32,
+        code: Vec<u8>,
+        exception_table_length: u16,
+        exception_table: Vec<ExceptionTable>,
+        attributes_count: u16,
+        attributes: Vec<AttributeInfo>,
+    },
     GeneralAttributeInfo {
         attribute_name_index: u16,
         attribute_length: u32,
         info: Vec<u8>,
     },
+}
+
+#[derive(Debug)]
+struct ExceptionTable {
+    start_pc: u16,
+    end_pc: u16,
+    handler_pc: u16,
+    catch_type: u16,
 }
 
 pub enum PredefinedAttributes {
@@ -185,12 +205,13 @@ pub fn parse_attributes(
     attributes
 }
 
-fn parse_attribute_info(cursor: &mut Cursor<&[u8]>, constant_pool: &Vec<CpInfo>) -> AttributeInfo {
+fn parse_attribute_info(cursor: &mut Cursor<&[u8]>, cp: &Vec<CpInfo>) -> AttributeInfo {
     let attribute_name_index = read_u16(cursor);
     let attribute_length = read_u32(cursor);
 
-    let attribute_name = constant_pool_value_at(constant_pool, attribute_name_index);
+    let attribute_name = constant_pool_value_at(cp, attribute_name_index);
     match PredefinedAttributes::from(attribute_name.as_str()) {
+        Code => parse_code_attribute_info(cursor, attribute_name_index, attribute_length, cp),
         _ => AttributeInfo::GeneralAttributeInfo {
             attribute_name_index,
             attribute_length,
@@ -199,27 +220,40 @@ fn parse_attribute_info(cursor: &mut Cursor<&[u8]>, constant_pool: &Vec<CpInfo>)
     }
 }
 
-#[test]
-fn test_parse_attribute_info() {
-    let bytes: &[u8] = &[
-        // Attributes
-        0x00, 0x19, 0x00, 0x00, 0x00, 0x26, 0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x0a, 0xb2,
-        0x00, 0x07, 0xb8, 0x00, 0x0d, 0xb6, 0x00, 0x13, 0xb1, 0x00, 0x00, 0x00, 0x01, 0x00, 0x1a,
-        0x00, 0x00, 0x00, 0x0a, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x09, 0x00, 0x04,
-    ];
-    let mut cursor = Cursor::new(bytes);
+fn parse_code_attribute_info(
+    cursor: &mut Cursor<&[u8]>,
+    attribute_name_index: u16,
+    attribute_length: u32,
+    cp: &Vec<CpInfo>,
+) -> AttributeInfo {
+    let max_stack = read_u16(cursor);
+    let max_locals = read_u16(cursor);
+    let code_length = read_u32(cursor);
+    let code = read_to(cursor, code_length as usize);
+    let exception_table_length = read_u16(cursor);
+    let mut exception_table = vec![];
+    for _ in 0..exception_table_length {
+        exception_table.push(ExceptionTable {
+            start_pc: read_u16(cursor),
+            end_pc: read_u16(cursor),
+            handler_pc: read_u16(cursor),
+            catch_type: read_u16(cursor),
+        });
+    }
+    let attributes_count = read_u16(cursor);
+    let attributes = parse_attributes(cursor, attributes_count, cp);
 
-    let result = parse_attribute_info(&mut cursor, &cp_test::dummy_cp());
-    match result {
-        AttributeInfo::GeneralAttributeInfo {
-            attribute_name_index,
-            attribute_length,
-            info,
-        } => {
-            assert_eq!(attribute_name_index, 0x0019);
-            assert_eq!(attribute_length, 0x00000026);
-            assert_eq!(info.len(), attribute_length as usize);
-        }
+    AttributeInfo::CodeAttributeInfo {
+        attribute_name_index,
+        attribute_length,
+        max_stack,
+        max_locals,
+        code_length,
+        code,
+        exception_table_length,
+        exception_table,
+        attributes_count,
+        attributes,
     }
 }
 
@@ -240,6 +274,42 @@ fn test_parse_method() {
     assert_eq!(result.descriptor_index, 0x1c);
     assert_eq!(result.attributes_count, 0x01);
     assert_eq!(result.attributes.len(), result.attributes_count as usize);
+}
+
+#[test]
+fn test_parse_code_attribute_info() {
+    let bytes: &[u8] = &[
+        // Attributes
+        0x00, 0x19, 0x00, 0x00, 0x00, 0x26, 0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x0a, 0xb2,
+        0x00, 0x07, 0xb8, 0x00, 0x0d, 0xb6, 0x00, 0x13, 0xb1, 0x00, 0x00, 0x00, 0x01, 0x00, 0x1a,
+        0x00, 0x00, 0x00, 0x0a, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x09, 0x00, 0x04,
+    ];
+    let mut cursor = Cursor::new(bytes);
+
+    let result = parse_attribute_info(&mut cursor, &cp_test::dummy_cp());
+    match result {
+        AttributeInfo::CodeAttributeInfo {
+            attribute_name_index,
+            attribute_length,
+            max_stack,
+            max_locals,
+            code_length,
+            code,
+            exception_table_length,
+            exception_table,
+            attributes_count,
+            attributes,
+        } => {
+            assert_eq!(attribute_name_index, 0x0019);
+            assert_eq!(attribute_length, 0x00000026);
+            assert_eq!(max_stack, 2);
+            assert_eq!(max_locals, 1);
+            assert_eq!(code_length, 10);
+            assert_eq!(code.len(), code_length as usize);
+            assert_eq!(attributes_count, 0x1);
+        }
+        _ => panic!("parse failed!"),
+    }
 }
 
 #[cfg(test)]
