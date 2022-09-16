@@ -43,11 +43,11 @@ impl ClassFile {
         let interfaces_count: u16 = read_u16(&mut cursor);
         let interfaces = parse_interfaces(&mut cursor, interfaces_count);
         let fields_count: u16 = read_u16(&mut cursor);
-        let fields = parse_fields(&mut cursor, fields_count);
+        let fields = parse_fields(&mut cursor, fields_count, &constant_pool);
         let methods_count: u16 = read_u16(&mut cursor);
-        let methods = parse_methods(&mut cursor, methods_count);
+        let methods = parse_methods(&mut cursor, methods_count, &constant_pool);
         let attributes_count: u16 = read_u16(&mut cursor);
-        let attributes = parse_attributes(&mut cursor, attributes_count);
+        let attributes = parse_attributes(&mut cursor, attributes_count, &constant_pool);
 
         ClassFile {
             magic,
