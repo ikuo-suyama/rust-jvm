@@ -23,11 +23,23 @@ pub struct MethodInfo {
     pub attributes: Vec<AttributeInfo>,
 }
 
-// impl MethodInfo {
-//     fn get_code_attribute(&self) -> AttributeInfo {
-//
-//     }
-// }
+impl MethodInfo {
+    pub fn get_code_attribute(&self) -> &CodeAttributeInfo {
+        self.attributes
+            .iter()
+            .find_map(|attr| match attr {
+                AttributeInfo::CodeAttributeInfo(code_attr) => Some(code_attr),
+                _ => None,
+            })
+            .expect(
+                format!(
+                    "MethodInfo doesn't contain code_attribute_info. {:#?}",
+                    self
+                )
+                .as_str(),
+            )
+    }
+}
 
 #[derive(Debug)]
 pub enum AttributeInfo {

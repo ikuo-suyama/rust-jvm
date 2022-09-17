@@ -55,11 +55,8 @@ impl JVM {
 static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
 
 fn find_main(class: &Class) -> &Vec<u8> {
-    match class.methods.get(MAIN_METHOD_NAME_DESCRIPTOR) {
-        Some(method) => match method.attributes.get(0).unwrap() {
-            CodeAttributeInfo(code_attribute) => &code_attribute.code,
-            _ => panic!("code not found"),
-        },
-        None => panic!("main not found"),
-    }
+    let main_method = &class.methods
+        .get(MAIN_METHOD_NAME_DESCRIPTOR)
+        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
+    &main_method.get_code_attribute().code
 }
