@@ -23,20 +23,15 @@ pub struct MethodInfo {
     pub attributes: Vec<AttributeInfo>,
 }
 
+// impl MethodInfo {
+//     fn get_code_attribute(&self) -> AttributeInfo {
+//
+//     }
+// }
+
 #[derive(Debug)]
 pub enum AttributeInfo {
-    CodeAttributeInfo {
-        attribute_name_index: u16,
-        attribute_length: u32,
-        max_stack: u16,
-        max_locals: u16,
-        code_length: u32,
-        code: Vec<u8>,
-        exception_table_length: u16,
-        exception_table: Vec<ExceptionTable>,
-        attributes_count: u16,
-        attributes: Vec<AttributeInfo>,
-    },
+    CodeAttributeInfo(CodeAttributeInfo),
     GeneralAttributeInfo {
         attribute_name_index: u16,
         attribute_length: u32,
@@ -45,7 +40,21 @@ pub enum AttributeInfo {
 }
 
 #[derive(Debug)]
-struct ExceptionTable {
+pub struct CodeAttributeInfo {
+    pub attribute_name_index: u16,
+    pub attribute_length: u32,
+    pub max_stack: u16,
+    pub max_locals: u16,
+    pub code_length: u32,
+    pub code: Vec<u8>,
+    pub exception_table_length: u16,
+    pub exception_table: Vec<ExceptionTable>,
+    pub attributes_count: u16,
+    pub attributes: Vec<AttributeInfo>,
+}
+
+#[derive(Debug)]
+pub struct ExceptionTable {
     start_pc: u16,
     end_pc: u16,
     handler_pc: u16,
@@ -243,7 +252,7 @@ fn parse_code_attribute_info(
     let attributes_count = read_u16(cursor);
     let attributes = parse_attributes(cursor, attributes_count, cp);
 
-    AttributeInfo::CodeAttributeInfo {
+    AttributeInfo::CodeAttributeInfo(CodeAttributeInfo {
         attribute_name_index,
         attribute_length,
         max_stack,
@@ -254,7 +263,7 @@ fn parse_code_attribute_info(
         exception_table,
         attributes_count,
         attributes,
-    }
+    })
 }
 
 #[test]
@@ -288,25 +297,17 @@ fn test_parse_code_attribute_info() {
 
     let result = parse_attribute_info(&mut cursor, &cp_test::dummy_cp());
     match result {
-        AttributeInfo::CodeAttributeInfo {
-            attribute_name_index,
-            attribute_length,
-            max_stack,
-            max_locals,
-            code_length,
-            code,
-            exception_table_length,
-            exception_table,
-            attributes_count,
-            attributes,
-        } => {
-            assert_eq!(attribute_name_index, 0x0019);
-            assert_eq!(attribute_length, 0x00000026);
-            assert_eq!(max_stack, 2);
-            assert_eq!(max_locals, 1);
-            assert_eq!(code_length, 10);
-            assert_eq!(code.len(), code_length as usize);
-            assert_eq!(attributes_count, 0x1);
+        AttributeInfo::CodeAttributeInfo(code_attribute) => {
+            assert_eq!(code_attribute.attribute_name_index, 0x0019);
+            assert_eq!(code_attribute.attribute_length, 0x00000026);
+            assert_eq!(code_attribute.max_stack, 2);
+            assert_eq!(code_attribute.max_locals, 1);
+            assert_eq!(code_attribute.code_length, 10);
+            assert_eq!(
+                code_attribute.code.len(),
+                code_attribute.code_length as usize
+            );
+            assert_eq!(code_attribute.attributes_count, 0x1);
         }
         _ => panic!("parse failed!"),
     }

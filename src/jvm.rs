@@ -1,4 +1,5 @@
 use crate::class::Class;
+use crate::class_attributes::AttributeInfo::CodeAttributeInfo;
 use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
 use crate::class_file::ClassFile;
 use crate::class_loader::ClassLoader;
@@ -56,7 +57,7 @@ static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
 fn find_main(class: &Class) -> &Vec<u8> {
     match class.methods.get(MAIN_METHOD_NAME_DESCRIPTOR) {
         Some(method) => match method.attributes.get(0).unwrap() {
-            AttributeInfo::CodeAttributeInfo { code, .. } => code,
+            CodeAttributeInfo(code_attribute) => &code_attribute.code,
             _ => panic!("code not found"),
         },
         None => panic!("main not found"),
