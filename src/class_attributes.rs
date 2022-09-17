@@ -44,11 +44,14 @@ impl MethodInfo {
 #[derive(Debug)]
 pub enum AttributeInfo {
     CodeAttributeInfo(CodeAttributeInfo),
-    GeneralAttributeInfo {
-        attribute_name_index: u16,
-        attribute_length: u32,
-        info: Vec<u8>,
-    },
+    GeneralAttributeInfo(GeneralAttributeInfo),
+}
+
+#[derive(Debug)]
+pub struct GeneralAttributeInfo {
+    attribute_name_index: u16,
+    attribute_length: u32,
+    info: Vec<u8>,
 }
 
 #[derive(Debug)]
@@ -233,11 +236,11 @@ fn parse_attribute_info(cursor: &mut Cursor<&[u8]>, cp: &Vec<CpInfo>) -> Attribu
     let attribute_name = constant_pool_value_at(cp, attribute_name_index);
     match PredefinedAttributes::from(attribute_name.as_str()) {
         Code => parse_code_attribute_info(cursor, attribute_name_index, attribute_length, cp),
-        _ => AttributeInfo::GeneralAttributeInfo {
+        _ => AttributeInfo::GeneralAttributeInfo(GeneralAttributeInfo {
             attribute_name_index,
             attribute_length,
             info: read_to(cursor, attribute_length as usize),
-        },
+        }),
     }
 }
 
