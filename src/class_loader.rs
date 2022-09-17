@@ -1,19 +1,64 @@
 use crate::binary::read_binary_file;
+use crate::class::Class;
+use crate::class_file::ClassFile;
+use crate::cp_info::constant_pool_value_at;
+use std::collections::HashMap;
 
 pub struct ClassLoader {}
 
 impl ClassLoader {
-    pub fn load_class(self, _class_name: &String) -> Vec<u8> {
-        let filename = _class_name.to_owned() + ".class";
-        let class = match read_binary_file(&filename) {
+    pub fn load_class<'a>(
+        self,
+        method_area: &'a mut HashMap<String, Class>,
+        class_name: &String,
+    ) -> &'a Class {
+        let filename = class_name.to_owned() + ".class";
+        let binary = match read_binary_file(&filename) {
             Ok(class) => class,
             Err(_e) => panic!(
                 "Error: Can not find or read class {}\n Reason {}",
-                _class_name, _e
+                class_name, _e
             ),
         };
-        println!("[DEBUG] -- {:x?}", class);
 
-        return vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
+        let class_file = ClassFile::parse_from(binary.as_slice());
+        // too messy, turn on when only needed...
+        // println!("{:#?}", class_file);
+
+        let class = create_class_from(class_file);
+        register_method_area(method_area, class)
+    }
+}
+
+fn register_method_area(method_area: &mut HashMap<String, Class>, class: Class) -> &Class {
+    let descriptor = class.descriptor.clone();
+    method_area.insert(descriptor.clone(), class);
+    method_area.get(&*descriptor).unwrap()
+}
+
+fn create_class_from(class_file: ClassFile) -> Class {
+    let descriptor = constant_pool_value_at(&class_file.constant_pool, class_file.this_class);
+
+    let mut methods = HashMap::new();
+    for method in class_file.methods {
+        let method_name = constant_pool_value_at(&class_file.constant_pool, method.name_index);
+        let method_descriptor =
+            constant_pool_value_at(&class_file.constant_pool, method.descriptor_index);
+        let method_id = format!("{}:{}", method_name, method_descriptor);
+        methods.insert(method_id, method);
+    }
+
+    let mut fields = HashMap::new();
+    for field in class_file.fields {
+        let field_name = constant_pool_value_at(&class_file.constant_pool, field.name_index);
+        let field_descriptor =
+            constant_pool_value_at(&class_file.constant_pool, field.descriptor_index);
+        let field_id = format!("{}:{}", field_name, field_descriptor);
+        fields.insert(field_name, field);
+    }
+    Class {
+        descriptor,
+        methods,
+        fields,
     }
 }

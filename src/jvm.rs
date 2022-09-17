@@ -1,7 +1,15 @@
+use crate::class::Class;
+use crate::class_attributes::AttributeInfo::CodeAttributeInfo;
+use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
+use crate::class_file::ClassFile;
 use crate::class_loader::ClassLoader;
 use crate::thread::Frame;
+use std::collections::HashMap;
 
-pub struct JVM {}
+pub struct JVM {
+    method_area: HashMap<String, Class>,
+    boot_loader: ClassLoader,
+}
 
 /// The first primitive JVM. A simple instruction interpreter.
 /// The code array is obtained by the following procedure.
@@ -23,16 +31,32 @@ pub struct JVM {}
 /// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-6.html
 impl JVM {
     pub fn create() -> Self {
-        JVM {}
+        JVM {
+            method_area: HashMap::new(),
+            boot_loader: ClassLoader {},
+        }
     }
 
-    pub fn launch(self, args: &[String]) {
-        println!("DEBUG -- {:?}", args);
-        let class_loader = ClassLoader {};
-        let code = class_loader.load_class(&args[0]);
+    pub fn launch(mut self, args: &[String]) {
+        println!("[DEBUG] -- {:?}", args);
+
+        let class = self.boot_loader.load_class(&mut self.method_area, &args[0]);
+        // println!("[DEBUG] -- {:#?}", class);
+
+        let code = find_main(class);
 
         let frame = Frame {};
-
         frame.invoke(code);
     }
+}
+
+// static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
+/// fetch target method as main for now
+static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
+
+fn find_main(class: &Class) -> &Vec<u8> {
+    let main_method = &class.methods
+        .get(MAIN_METHOD_NAME_DESCRIPTOR)
+        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
+    &main_method.get_code_attribute().code
 }

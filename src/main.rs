@@ -1,10 +1,11 @@
 extern crate core;
 
 mod binary;
+mod class;
 mod class_attributes;
+mod class_file;
 mod class_loader;
 mod cp_info;
-mod java_class;
 mod jvm;
 mod thread;
 

@@ -5,15 +5,17 @@
 const ICONST_1: u8 = 0x04;
 const ICONST_2: u8 = 0x05;
 
+const ISTORE_0: u8 = 0x3b;
 const ISTORE_1: u8 = 0x3C;
 const ISTORE_2: u8 = 0x3d;
 
-const ILOAD_1: u8 = 0x1B;
-const ILOAD_2: u8 = 0x1C;
+const ILOAD_0: u8 = 0x1a;
+const ILOAD_1: u8 = 0x1b;
+const ILOAD_2: u8 = 0x1c;
 
 const IADD: u8 = 0x60;
 
-const IRETURN: u8 = 0xAC;
+const IRETURN: u8 = 0xac;
 
 // pub struct Thread {
 //     pc: Cell<u64>,
@@ -23,14 +25,14 @@ const IRETURN: u8 = 0xAC;
 pub struct Frame {}
 
 impl Frame {
-    pub fn invoke(&self, code: Vec<u8>) -> u8 {
+    pub fn invoke(&self, code: &Vec<u8>) -> u8 {
         let mut pc = 0;
         let mut local_variable: Vec<u8> = vec![0, 0, 0];
         let mut operand_stack: Vec<u8> = Vec::new();
 
         let result = loop {
             let instruction = code[pc];
-            println!("DEBUG -- pc: {} instruction: {:#04x}", pc, instruction);
+            println!("[DEBUG] -- pc: {} instruction: {:#04x}", pc, instruction);
             match instruction {
                 ICONST_1 => {
                     operand_stack.push(1);
@@ -41,6 +43,11 @@ impl Frame {
                     pc += 1;
                 }
 
+                ISTORE_0 => {
+                    let val = operand_stack.pop().unwrap();
+                    local_variable[0] = val;
+                    pc += 1;
+                }
                 ISTORE_1 => {
                     let val = operand_stack.pop().unwrap();
                     local_variable[1] = val;
@@ -52,6 +59,11 @@ impl Frame {
                     pc += 1;
                 }
 
+                ILOAD_0 => {
+                    let val = local_variable[0];
+                    operand_stack.push(val);
+                    pc += 1;
+                }
                 ILOAD_1 => {
                     let val = local_variable[1];
                     operand_stack.push(val);
@@ -76,7 +88,7 @@ impl Frame {
                     let val = operand_stack.pop().unwrap();
                     break val;
                 }
-                _ => break 0,
+                _ => panic!("Instruction 0x{:x} doesn't implement yet", instruction),
             };
         };
 
@@ -90,7 +102,7 @@ fn test_invoke() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
     let frame = Frame {};
 
-    let result = frame.invoke(code);
+    let result = frame.invoke(&code);
 
     assert_eq!(result, 3);
 }

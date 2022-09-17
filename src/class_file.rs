@@ -3,10 +3,11 @@ use crate::class_attributes::{
     parse_attributes, parse_fields, parse_interfaces, parse_methods, AttributeInfo, FieldInfo,
     MethodInfo,
 };
-use crate::cp_info::{parse_cp_info, CpInfo};
+use crate::cp_info::{constant_pool_value_at, parse_cp_info, CpInfo};
+use std::collections::HashMap;
 use std::io::Cursor;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ClassFile {
     /// ClassFile Structure
     /// https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.1
@@ -29,8 +30,8 @@ pub struct ClassFile {
 }
 
 impl ClassFile {
-    pub fn parse_from(class: &[u8]) -> ClassFile {
-        let mut cursor = Cursor::new(class);
+    pub fn parse_from(binary: &[u8]) -> ClassFile {
+        let mut cursor = Cursor::new(binary);
         let magic: u32 = read_u32(&mut cursor);
         let minor_version: u16 = read_u16(&mut cursor);
         let major_version: u16 = read_u16(&mut cursor);
@@ -42,11 +43,11 @@ impl ClassFile {
         let interfaces_count: u16 = read_u16(&mut cursor);
         let interfaces = parse_interfaces(&mut cursor, interfaces_count);
         let fields_count: u16 = read_u16(&mut cursor);
-        let fields = parse_fields(&mut cursor, fields_count);
+        let fields = parse_fields(&mut cursor, fields_count, &constant_pool);
         let methods_count: u16 = read_u16(&mut cursor);
-        let methods = parse_methods(&mut cursor, methods_count);
+        let methods = parse_methods(&mut cursor, methods_count, &constant_pool);
         let attributes_count: u16 = read_u16(&mut cursor);
-        let attributes = parse_attributes(&mut cursor, attributes_count);
+        let attributes = parse_attributes(&mut cursor, attributes_count, &constant_pool);
 
         ClassFile {
             magic,

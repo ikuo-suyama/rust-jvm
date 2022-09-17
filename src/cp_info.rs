@@ -27,10 +27,7 @@ fn parse_cp_info(cursor: &mut Cursor<&[u8]>) -> Vec<Box<dyn CpInfo>> {
 use std::io::Cursor;
 
 use crate::binary::{read_binary_file, read_string_to, read_u16, read_u32, read_u8};
-use crate::cp_info::CpInfo::{
-    ConstantClassInfo, ConstantFieldref, ConstantInterfaceMethodRef, ConstantMethodRef,
-    ConstantNameAndType, ConstantUtf8,
-};
+use crate::class_file::ClassFile;
 
 #[derive(Debug)]
 pub enum CpInfo {
@@ -123,30 +120,30 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
     for i in 1..constant_pool_count {
         let tag = CP_TAGES::from_u8(read_u8(cursor));
         let cp_info = match tag {
-            CP_TAGES::CONSTANT_Class => ConstantClassInfo {
+            CP_TAGES::CONSTANT_Class => CpInfo::ConstantClassInfo {
                 tag,
                 name_index: read_u16(cursor),
             },
 
             // Method, Filed, Interface
-            CP_TAGES::CONSTANT_Methodref => ConstantMethodRef {
+            CP_TAGES::CONSTANT_Methodref => CpInfo::ConstantMethodRef {
                 tag,
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
-            CP_TAGES::CONSTANT_Fieldref => ConstantFieldref {
+            CP_TAGES::CONSTANT_Fieldref => CpInfo::ConstantFieldref {
                 tag,
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
-            CP_TAGES::CONSTANT_InterfaceMethodref => ConstantInterfaceMethodRef {
+            CP_TAGES::CONSTANT_InterfaceMethodref => CpInfo::ConstantInterfaceMethodRef {
                 tag,
                 class_index: read_u16(cursor),
                 name_and_type_index: read_u16(cursor),
             },
 
             // NameAndType
-            CP_TAGES::CONSTANT_NameAndType => ConstantNameAndType {
+            CP_TAGES::CONSTANT_NameAndType => CpInfo::ConstantNameAndType {
                 tag,
                 name_index: read_u16(cursor),
                 descriptor_index: read_u16(cursor),
@@ -155,7 +152,7 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
             // Utf8
             CP_TAGES::CONSTANT_Utf8 => {
                 let length = read_u16(cursor);
-                ConstantUtf8 {
+                CpInfo::ConstantUtf8 {
                     tag,
                     length,
                     bytes: read_string_to(cursor, length as usize),
@@ -174,6 +171,57 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
     constant_pool
 }
 
+pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> String {
+    let parse_cp_value = |cp: &CpInfo| match cp {
+        CpInfo::ConstantUtf8 { tag, length, bytes } => bytes.clone(),
+        CpInfo::ConstantClassInfo { tag, name_index } => {
+            constant_pool_value_at(constant_pool, name_index.clone())
+        }
+        CpInfo::ConstantNameAndType {
+            tag,
+            name_index,
+            descriptor_index,
+        } => {
+            let name = constant_pool_value_at(constant_pool, name_index.clone());
+            let desc = constant_pool_value_at(constant_pool, descriptor_index.clone());
+            format!("{}:{}", name, desc)
+        }
+        CpInfo::ConstantMethodRef {
+            tag,
+            class_index,
+            name_and_type_index,
+        } => {
+            let class = constant_pool_value_at(constant_pool, class_index.clone());
+            let nt = constant_pool_value_at(constant_pool, name_and_type_index.clone());
+            format!("{}.{}", class, nt)
+        }
+        CpInfo::ConstantFieldref {
+            tag,
+            class_index,
+            name_and_type_index,
+        } => {
+            let class = constant_pool_value_at(constant_pool, class_index.clone());
+            let nt = constant_pool_value_at(constant_pool, name_and_type_index.clone());
+            format!("{}.{}", class, nt)
+        }
+        _ => todo!("not implemented yet!!"),
+    };
+    let cp_not_found_error = |index: u16| {
+        panic!(
+            "index out of bounds for constant pool: length {} index {}",
+            constant_pool.len(),
+            index
+        )
+    };
+
+    let maybe_cp = constant_pool.get((index - 1) as usize);
+    let value = match maybe_cp {
+        Some(cp) => parse_cp_value(cp),
+        None => cp_not_found_error(index),
+    };
+    value
+}
+
 #[test]
 fn test_parse_cp_info() {
     let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
@@ -187,4 +235,37 @@ fn test_parse_cp_info() {
 
     let result = parse_cp_info(&mut cursor, constant_pool_count);
     assert_eq!(result.len(), (constant_pool_count - 1) as usize);
+}
+
+#[test]
+fn test_constant_pool_value_at() {
+    let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
+    let class_file = ClassFile::parse_from(binary.as_slice());
+
+    // for cp index, see @sampleSum.jvm file
+    let cp = class_file.constant_pool;
+    let utf8 = constant_pool_value_at(&cp, 30);
+    assert_eq!(utf8, "SimpleSum.java");
+
+    let class = constant_pool_value_at(&cp, 2);
+    assert_eq!(class, "java/lang/Object");
+
+    let name_and_type = constant_pool_value_at(&cp, 3);
+    assert_eq!(name_and_type, "<init>:()V");
+
+    let method_ref = constant_pool_value_at(&cp, 1);
+    assert_eq!(method_ref, "java/lang/Object.<init>:()V");
+
+    let field_ref = constant_pool_value_at(&cp, 7);
+    assert_eq!(field_ref, "java/lang/System.out:Ljava/io/PrintStream;");
+}
+
+#[test]
+#[should_panic]
+fn test_constant_pool_value_obe() {
+    let binary = read_binary_file(&"java/SimpleSum.class".to_owned()).unwrap();
+    let class_file = ClassFile::parse_from(binary.as_slice());
+    let cp = class_file.constant_pool;
+
+    let _ = constant_pool_value_at(&cp, 31);
 }
