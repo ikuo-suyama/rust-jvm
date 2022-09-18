@@ -1,6 +1,7 @@
-use crate::binary::read_u8;
+use crate::binary::{read_i16, read_u16, read_u8};
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
+use std::fs::read;
 use std::io::Cursor;
 
 // TODO: 1. sprit instruction code to function
@@ -14,11 +15,14 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
         frame.pc = cursor.position();
         let instruction_code = read_u8(cursor);
         let instruction = Instruction::from(instruction_code);
-        println!(
-            "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
-            frame.pc, instruction, instruction_code
-        );
+        // println!(
+        //     "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
+        //     frame.pc, instruction, instruction_code
+        // );
         match instruction {
+            Instruction::ICONST_0 => {
+                operand_stack.push(0);
+            }
             Instruction::ICONST_1 => {
                 operand_stack.push(1);
             }
@@ -53,11 +57,42 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
             }
 
             Instruction::IADD => {
-                let val1 = operand_stack.pop().unwrap();
                 let val2 = operand_stack.pop().unwrap();
+                let val1 = operand_stack.pop().unwrap();
 
                 let result = val1 + val2;
                 operand_stack.push(result);
+            }
+
+            Instruction::SIPUSH => {
+                // TODO: handle type...
+                let val = read_u16(cursor);
+                operand_stack.push(val as u64);
+            }
+
+            Instruction::IINC => {
+                let index = read_u8(cursor);
+                let const_val = read_u8(cursor);
+
+                local_variable[index as usize] += const_val as u64;
+            }
+
+            Instruction::IF_ICMPGE => {
+                let current_pc = cursor.position() - 1;
+                let next_pc_offset = read_i16(cursor);
+                let val2 = operand_stack.pop().unwrap();
+                let val1 = operand_stack.pop().unwrap();
+
+                if val1 >= val2 {
+                    cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
+                }
+            }
+
+            Instruction::GOTO => {
+                // TODO! unsigned offset calc is suck
+                let current_pc = cursor.position() - 1;
+                let next_pc_offset = read_i16(cursor);
+                cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
             }
 
             Instruction::IRETURN => {
@@ -98,7 +133,25 @@ fn test_invoke_sum() {
 }
 
 #[test]
-fn test_invoke_loop() {}
+fn test_invoke_loop() {
+    let code: Vec<u8> = vec![
+        0x03, 0x3b, 0x03, 0x3c, 0x1b, 0x11, 0x27, 0x10, 0xa2, 0x00, 0x0d, 0x1a, 0x1b, 0x60, 0x3b,
+        0x84, 0x01, 0x01, 0xa7, 0xff, 0xf2, 0x1a, 0xac,
+    ];
+    let context = &frame_test::dummy_class();
+    let current_method = &frame_test::dummy_method();
+    let mut frame = Frame {
+        pc: 0,
+        local_variable: vec![0; 100],
+        operand_stack: vec![],
+        context,
+        current_method,
+    };
+
+    let result = _invoke(&mut frame, &code);
+
+    assert_eq!(result, 49995000)
+}
 
 #[cfg(test)]
 mod frame_test {
