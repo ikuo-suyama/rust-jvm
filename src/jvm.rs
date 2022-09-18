@@ -4,7 +4,7 @@ use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
 use crate::class_file::ClassFile;
 use crate::class_loader::ClassLoader;
 use crate::main;
-use crate::thread::Frame;
+use crate::thread::{Frame, Thread};
 use std::collections::HashMap;
 
 pub struct JVM {
@@ -46,8 +46,8 @@ impl JVM {
 
         let main_method = find_main(class);
 
-        let frame = Frame::create(class, main_method);
-        frame.invoke();
+        let thread = Thread::create();
+        thread.run(class, main_method);
     }
 }
 

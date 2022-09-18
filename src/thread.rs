@@ -23,6 +23,22 @@ pub struct Thread<'a> {
     java_virtual_machine_stack: Vec<Frame<'a>>,
 }
 
+impl<'a> Thread<'a> {
+    pub fn create() -> Self {
+        Thread {
+            java_virtual_machine_stack: vec![],
+        }
+    }
+
+    pub fn run(mut self, context: &'a Class, current_method: &'a MethodInfo) {
+        let mut frame = Frame::create(context, current_method);
+        self.java_virtual_machine_stack.push(frame);
+        let top = self.java_virtual_machine_stack.len() - 1;
+        let frame = self.java_virtual_machine_stack.get_mut(top).unwrap();
+        frame.invoke();
+    }
+}
+
 #[derive(Debug)]
 pub struct Frame<'a> {
     pub pc: u32,
@@ -43,7 +59,7 @@ impl<'a> Frame<'a> {
         }
     }
 
-    pub fn invoke(self) -> u8 {
+    pub fn invoke(&self) -> u8 {
         let code = &self.current_method.get_code_attribute().code;
         self._invoke(code)
     }
