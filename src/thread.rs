@@ -1,6 +1,7 @@
 // use std::cell::Cell;
 // use std::cell::RefCell;
 
+use crate::binary::{read_u16, read_u8};
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
 use std::io::Cursor;
@@ -44,7 +45,7 @@ impl<'a> Thread<'a> {
 
 #[derive(Debug)]
 pub struct Frame<'a> {
-    pub pc: usize,
+    pub pc: u64,
     pub local_variable: Vec<u64>,
     pub operand_stack: Vec<u64>,
     pub context: &'a Class,
@@ -70,12 +71,13 @@ impl<'a> Frame<'a> {
 }
 
 fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
-    let mut cursor = Cursor::new(code);
+    let mut cursor = &mut Cursor::new(code.as_slice());
     let mut local_variable = &mut frame.local_variable;
     let mut operand_stack = &mut frame.operand_stack;
 
     let result = loop {
-        let instruction = code[frame.pc];
+        frame.pc = cursor.position();
+        let instruction = read_u8(cursor);
         println!(
             "[DEBUG] -- frame.pc: {} instruction: {:#04x}",
             frame.pc, instruction
@@ -83,43 +85,35 @@ fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
         match instruction {
             ICONST_1 => {
                 operand_stack.push(1);
-                frame.pc += 1;
             }
             ICONST_2 => {
                 operand_stack.push(2);
-                frame.pc += 1;
             }
 
             ISTORE_0 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[0] = val;
-                frame.pc += 1;
             }
             ISTORE_1 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[1] = val;
-                frame.pc += 1;
             }
             ISTORE_2 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[2] = val;
-                frame.pc += 1;
             }
 
             ILOAD_0 => {
                 let val = local_variable[0];
                 operand_stack.push(val);
-                frame.pc += 1;
             }
             ILOAD_1 => {
                 let val = local_variable[1];
                 operand_stack.push(val);
-                frame.pc += 1;
             }
             ILOAD_2 => {
                 let val = local_variable[2];
                 operand_stack.push(val);
-                frame.pc += 1;
             }
 
             IADD => {
@@ -128,7 +122,6 @@ fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
 
                 let result = val1 + val2;
                 operand_stack.push(result);
-                frame.pc += 1;
             }
 
             IRETURN => {
