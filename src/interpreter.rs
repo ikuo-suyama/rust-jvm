@@ -1,22 +1,10 @@
 use crate::binary::read_u8;
+use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 use std::io::Cursor;
 
-const ICONST_1: u8 = 0x04;
-const ICONST_2: u8 = 0x05;
-
-const ISTORE_0: u8 = 0x3b;
-const ISTORE_1: u8 = 0x3C;
-const ISTORE_2: u8 = 0x3d;
-
-const ILOAD_0: u8 = 0x1a;
-const ILOAD_1: u8 = 0x1b;
-const ILOAD_2: u8 = 0x1c;
-
-const IADD: u8 = 0x60;
-
-const IRETURN: u8 = 0xac;
-
+// TODO: 1. sprit instruction code to function
+// TODO: 2. create return type for instruction, e.g. CONTINUE/RETURN/INVOKE
 pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
     let cursor = &mut Cursor::new(code.as_slice());
     let local_variable = &mut frame.local_variable;
@@ -24,46 +12,47 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
 
     let result = loop {
         frame.pc = cursor.position();
-        let instruction = read_u8(cursor);
+        let instruction_code = read_u8(cursor);
+        let instruction = Instruction::from(instruction_code);
         println!(
-            "[DEBUG] -- frame.pc: {} instruction: {:#04x}",
-            frame.pc, instruction
+            "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
+            frame.pc, instruction, instruction_code
         );
         match instruction {
-            ICONST_1 => {
+            Instruction::ICONST_1 => {
                 operand_stack.push(1);
             }
-            ICONST_2 => {
+            Instruction::ICONST_2 => {
                 operand_stack.push(2);
             }
 
-            ISTORE_0 => {
+            Instruction::ISTORE_0 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[0] = val;
             }
-            ISTORE_1 => {
+            Instruction::ISTORE_1 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[1] = val;
             }
-            ISTORE_2 => {
+            Instruction::ISTORE_2 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[2] = val;
             }
 
-            ILOAD_0 => {
+            Instruction::ILOAD_0 => {
                 let val = local_variable[0];
                 operand_stack.push(val);
             }
-            ILOAD_1 => {
+            Instruction::ILOAD_1 => {
                 let val = local_variable[1];
                 operand_stack.push(val);
             }
-            ILOAD_2 => {
+            Instruction::ILOAD_2 => {
                 let val = local_variable[2];
                 operand_stack.push(val);
             }
 
-            IADD => {
+            Instruction::IADD => {
                 let val1 = operand_stack.pop().unwrap();
                 let val2 = operand_stack.pop().unwrap();
 
@@ -71,11 +60,14 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
                 operand_stack.push(result);
             }
 
-            IRETURN => {
+            Instruction::IRETURN => {
                 let val = operand_stack.pop().unwrap();
                 break val;
             }
-            _ => panic!("Instruction 0x{:x} doesn't implement yet", instruction),
+            _ => panic!(
+                "Instruction {:#?}(0x{:x}) doesn't implement yet",
+                instruction, instruction_code
+            ),
         };
     };
 
