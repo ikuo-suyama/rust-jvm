@@ -65,7 +65,7 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
                 break val;
             }
             _ => panic!(
-                "Instruction {:#?}(0x{:x}) doesn't implement yet",
+                "Instruction {:#?}(0x{:x}) isn't implemented yet",
                 instruction, instruction_code
             ),
         };
