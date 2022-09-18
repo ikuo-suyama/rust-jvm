@@ -53,6 +53,14 @@ pub fn read_to(cursor: &mut Cursor<&[u8]>, length: usize) -> Vec<u8> {
     buf.to_owned()
 }
 
+pub fn debug_bytes(bytes: &Vec<u8>) {
+    let s: String = bytes
+        .iter()
+        .map(|byte| format!("0x{:02x}, ", byte))
+        .collect();
+    println!("[DEBUG] -- [{}]", s);
+}
+
 #[test]
 fn test_read_u8() {
     let bytes: &[u8] = &[0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];

@@ -1,3 +1,4 @@
+use crate::binary::debug_bytes;
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
 use crate::interpreter::_invoke;
@@ -47,6 +48,8 @@ impl<'a> Frame<'a> {
 
     pub fn invoke(&mut self) {
         let code = &self.current_method.get_code_attribute().code;
+        debug_bytes(code);
+
         _invoke(self, code);
     }
 }
