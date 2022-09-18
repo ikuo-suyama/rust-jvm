@@ -1,6 +1,6 @@
 Classfile /Users/ikuo.suyama/src/rust-jvm/java/SimpleSum.class
-  Last modified 2022/09/07; size 466 bytes
-  SHA-256 checksum a3433df3ebf69f16ce01122ae7189a8379459883d1f3c5689d6919a4f0fb78fc
+  Last modified 2022/09/18; size 460 bytes
+  SHA-256 checksum b59c051eeabc7e9b573495390c6488d99ef0480e8aeafb980f67923e611ef1e7
   Compiled from "SimpleSum.java"
 public class SimpleSum
   minor version: 0
@@ -22,11 +22,11 @@ Constant pool:
   #10 = Utf8               java/lang/System
   #11 = Utf8               out
   #12 = Utf8               Ljava/io/PrintStream;
-  #13 = Methodref          #14.#15        // SimpleSum.sum:()I
+  #13 = Methodref          #14.#15        // SimpleSum.main:()I
   #14 = Class              #16            // SimpleSum
-  #15 = NameAndType        #17:#18        // sum:()I
+  #15 = NameAndType        #17:#18        // main:()I
   #16 = Utf8               SimpleSum
-  #17 = Utf8               sum
+  #17 = Utf8               main
   #18 = Utf8               ()I
   #19 = Methodref          #20.#21        // java/io/PrintStream.println:(I)V
   #20 = Class              #22            // java/io/PrintStream
@@ -36,10 +36,9 @@ Constant pool:
   #24 = Utf8               (I)V
   #25 = Utf8               Code
   #26 = Utf8               LineNumberTable
-  #27 = Utf8               main
-  #28 = Utf8               ([Ljava/lang/String;)V
-  #29 = Utf8               SourceFile
-  #30 = Utf8               SimpleSum.java
+  #27 = Utf8               ([Ljava/lang/String;)V
+  #28 = Utf8               SourceFile
+  #29 = Utf8               SimpleSum.java
 {
   public SimpleSum();
     descriptor: ()V
@@ -58,14 +57,14 @@ Constant pool:
     Code:
       stack=2, locals=1, args_size=1
          0: getstatic     #7                  // Field java/lang/System.out:Ljava/io/PrintStream;
-         3: invokestatic  #13                 // Method sum:()I
+         3: invokestatic  #13                 // Method main:()I
          6: invokevirtual #19                 // Method java/io/PrintStream.println:(I)V
          9: return
       LineNumberTable:
         line 3: 0
         line 4: 9
 
-  public static int sum();
+  public static int main();
     descriptor: ()I
     flags: (0x0009) ACC_PUBLIC, ACC_STATIC
     Code:

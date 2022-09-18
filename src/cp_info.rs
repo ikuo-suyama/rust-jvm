@@ -244,7 +244,7 @@ fn test_constant_pool_value_at() {
 
     // for cp index, see @sampleSum.jvm file
     let cp = class_file.constant_pool;
-    let utf8 = constant_pool_value_at(&cp, 30);
+    let utf8 = constant_pool_value_at(&cp, 29);
     assert_eq!(utf8, "SimpleSum.java");
 
     let class = constant_pool_value_at(&cp, 2);

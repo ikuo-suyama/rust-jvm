@@ -76,7 +76,7 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
 }
 
 #[test]
-fn test_invoke() {
+fn test_invoke_sum() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
     let context = &frame_test::dummy_class();
     let current_method = &frame_test::dummy_method();
@@ -96,6 +96,9 @@ fn test_invoke() {
     assert_eq!(frame.local_variable[1], 1);
     assert_eq!(frame.local_variable[2], 2);
 }
+
+#[test]
+fn test_invoke_loop() {}
 
 #[cfg(test)]
 mod frame_test {

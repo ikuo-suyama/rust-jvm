@@ -80,7 +80,7 @@ fn test_parse_class() {
     assert_eq!(result.magic, 0xCAFEBABE_u32);
     assert_eq!(result.minor_version, 0);
     assert_eq!(result.major_version, 61);
-    assert_eq!(result.constant_pool_count, 31);
+    assert_eq!(result.constant_pool_count, 30);
     assert_eq!(
         result.constant_pool.len(),
         (result.constant_pool_count - 1) as usize

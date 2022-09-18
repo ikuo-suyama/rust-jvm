@@ -51,7 +51,7 @@ impl JVM {
 
 // static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
 /// fetch target method as main for now
-static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
+static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:()I";
 
 fn find_main(class: &Class) -> &MethodInfo {
     &class.methods
