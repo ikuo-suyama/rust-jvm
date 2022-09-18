@@ -3,6 +3,7 @@ use crate::class_attributes::AttributeInfo::CodeAttributeInfo;
 use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
 use crate::class_file::ClassFile;
 use crate::class_loader::ClassLoader;
+use crate::main;
 use crate::thread::Frame;
 use std::collections::HashMap;
 
@@ -43,10 +44,10 @@ impl JVM {
         let class = self.boot_loader.load_class(&mut self.method_area, &args[0]);
         // println!("[DEBUG] -- {:#?}", class);
 
-        let code = find_main(class);
+        let main_method = find_main(class);
 
-        let frame = Frame {};
-        frame.invoke(code);
+        let frame = Frame::create(class, main_method);
+        frame.invoke();
     }
 }
 
@@ -54,9 +55,8 @@ impl JVM {
 /// fetch target method as main for now
 static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
 
-fn find_main(class: &Class) -> &Vec<u8> {
-    let main_method = &class.methods
+fn find_main(class: &Class) -> &MethodInfo {
+    &class.methods
         .get(MAIN_METHOD_NAME_DESCRIPTOR)
-        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
-    &main_method.get_code_attribute().code
+        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)")
 }

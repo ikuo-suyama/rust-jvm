@@ -1,7 +1,9 @@
 // use std::cell::Cell;
 // use std::cell::RefCell;
 
-// Instructions
+use crate::class::Class;
+use crate::class_attributes::MethodInfo;
+
 const ICONST_1: u8 = 0x04;
 const ICONST_2: u8 = 0x05;
 
@@ -17,15 +19,35 @@ const IADD: u8 = 0x60;
 
 const IRETURN: u8 = 0xac;
 
-// pub struct Thread {
-//     pc: Cell<u64>,
-//     java_virtual_machine_stack: RefCell<Vec<Frame>>
-// }
+pub struct Thread<'a> {
+    java_virtual_machine_stack: Vec<Frame<'a>>,
+}
 
-pub struct Frame {}
+#[derive(Debug)]
+pub struct Frame<'a> {
+    pub pc: u32,
+    pub local_variable: Vec<u64>,
+    pub operand_stack: Vec<u64>,
+    pub context: &'a Class,
+    pub current_method: &'a MethodInfo,
+}
 
-impl Frame {
-    pub fn invoke(&self, code: &Vec<u8>) -> u8 {
+impl<'a> Frame<'a> {
+    pub fn create(context: &'a Class, current_method: &'a MethodInfo) -> Self {
+        Frame {
+            pc: 0,
+            local_variable: vec![],
+            operand_stack: vec![],
+            context,
+            current_method,
+        }
+    }
+
+    pub fn invoke(self) -> u8 {
+        let code = &self.current_method.get_code_attribute().code;
+        self._invoke(code)
+    }
+    fn _invoke(&self, code: &Vec<u8>) -> u8 {
         let mut pc = 0;
         let mut local_variable: Vec<u8> = vec![0, 0, 0];
         let mut operand_stack: Vec<u8> = Vec::new();
@@ -100,9 +122,36 @@ impl Frame {
 #[test]
 fn test_invoke() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
-    let frame = Frame {};
+    let class = frame_test::dummy_class();
+    let method = frame_test::dummy_method();
+    let frame = Frame::create(&class, &method);
 
-    let result = frame.invoke(&code);
+    let result = frame._invoke(&code);
 
     assert_eq!(result, 3);
+}
+
+#[cfg(test)]
+mod frame_test {
+    use crate::class::Class;
+    use crate::class_attributes::MethodInfo;
+    use std::collections::HashMap;
+
+    pub fn dummy_class() -> Class {
+        Class {
+            descriptor: "dummy".to_string(),
+            methods: HashMap::new(),
+            fields: HashMap::new(),
+        }
+    }
+
+    pub fn dummy_method() -> MethodInfo {
+        MethodInfo {
+            access_flags: 0,
+            name_index: 0,
+            descriptor_index: 0,
+            attributes_count: 0,
+            attributes: vec![],
+        }
+    }
 }

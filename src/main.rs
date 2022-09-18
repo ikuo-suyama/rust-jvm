@@ -6,6 +6,7 @@ mod class_attributes;
 mod class_file;
 mod class_loader;
 mod cp_info;
+mod instruction_set;
 mod jvm;
 mod thread;
 
