@@ -18,9 +18,9 @@ const IADD: u8 = 0x60;
 const IRETURN: u8 = 0xac;
 
 pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
-    let mut cursor = &mut Cursor::new(code.as_slice());
-    let mut local_variable = &mut frame.local_variable;
-    let mut operand_stack = &mut frame.operand_stack;
+    let cursor = &mut Cursor::new(code.as_slice());
+    let local_variable = &mut frame.local_variable;
+    let operand_stack = &mut frame.operand_stack;
 
     let result = loop {
         frame.pc = cursor.position();

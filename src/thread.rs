@@ -1,11 +1,6 @@
-// use std::cell::Cell;
-// use std::cell::RefCell;
-
-use crate::binary::{read_u16, read_u8};
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
 use crate::interpreter::_invoke;
-use std::io::Cursor;
 
 pub struct Thread<'a> {
     java_virtual_machine_stack: Vec<Frame<'a>>,
@@ -19,7 +14,7 @@ impl<'a> Thread<'a> {
     }
 
     pub fn run(mut self, context: &'a Class, current_method: &'a MethodInfo) {
-        let mut frame = Frame::create(context, current_method);
+        let frame = Frame::create(context, current_method);
 
         self.java_virtual_machine_stack.push(frame);
         let top = self.java_virtual_machine_stack.len() - 1;

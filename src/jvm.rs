@@ -1,11 +1,9 @@
-use crate::class::Class;
-use crate::class_attributes::AttributeInfo::CodeAttributeInfo;
-use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
-use crate::class_file::ClassFile;
-use crate::class_loader::ClassLoader;
-use crate::main;
-use crate::thread::{Frame, Thread};
 use std::collections::HashMap;
+
+use crate::class::Class;
+use crate::class_attributes::MethodInfo;
+use crate::class_loader::ClassLoader;
+use crate::thread::Thread;
 
 pub struct JVM {
     method_area: HashMap<String, Class>,
