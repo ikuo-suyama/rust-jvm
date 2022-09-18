@@ -3,6 +3,7 @@
 
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
+use std::io::Cursor;
 
 const ICONST_1: u8 = 0x04;
 const ICONST_2: u8 = 0x05;
@@ -43,7 +44,7 @@ impl<'a> Thread<'a> {
 
 #[derive(Debug)]
 pub struct Frame<'a> {
-    pub pc: u32,
+    pub pc: usize,
     pub local_variable: Vec<u64>,
     pub operand_stack: Vec<u64>,
     pub context: &'a Class,
@@ -52,9 +53,10 @@ pub struct Frame<'a> {
 
 impl<'a> Frame<'a> {
     pub fn create(context: &'a Class, current_method: &'a MethodInfo) -> Self {
+        let max_locals = current_method.get_code_attribute().max_locals;
         Frame {
             pc: 0,
-            local_variable: vec![],
+            local_variable: vec![0; max_locals as usize],
             operand_stack: vec![],
             context,
             current_method,
@@ -67,54 +69,57 @@ impl<'a> Frame<'a> {
     }
 }
 
-fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u8 {
-    let mut pc = 0;
-    let mut local_variable: Vec<u8> = vec![0, 0, 0];
-    let mut operand_stack: Vec<u8> = Vec::new();
+fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
+    let mut cursor = Cursor::new(code);
+    let mut local_variable = &mut frame.local_variable;
+    let mut operand_stack = &mut frame.operand_stack;
 
     let result = loop {
-        let instruction = code[pc];
-        println!("[DEBUG] -- pc: {} instruction: {:#04x}", pc, instruction);
+        let instruction = code[frame.pc];
+        println!(
+            "[DEBUG] -- frame.pc: {} instruction: {:#04x}",
+            frame.pc, instruction
+        );
         match instruction {
             ICONST_1 => {
                 operand_stack.push(1);
-                pc += 1;
+                frame.pc += 1;
             }
             ICONST_2 => {
                 operand_stack.push(2);
-                pc += 1;
+                frame.pc += 1;
             }
 
             ISTORE_0 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[0] = val;
-                pc += 1;
+                frame.pc += 1;
             }
             ISTORE_1 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[1] = val;
-                pc += 1;
+                frame.pc += 1;
             }
             ISTORE_2 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[2] = val;
-                pc += 1;
+                frame.pc += 1;
             }
 
             ILOAD_0 => {
                 let val = local_variable[0];
                 operand_stack.push(val);
-                pc += 1;
+                frame.pc += 1;
             }
             ILOAD_1 => {
                 let val = local_variable[1];
                 operand_stack.push(val);
-                pc += 1;
+                frame.pc += 1;
             }
             ILOAD_2 => {
                 let val = local_variable[2];
                 operand_stack.push(val);
-                pc += 1;
+                frame.pc += 1;
             }
 
             IADD => {
@@ -123,7 +128,7 @@ fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u8 {
 
                 let result = val1 + val2;
                 operand_stack.push(result);
-                pc += 1;
+                frame.pc += 1;
             }
 
             IRETURN => {
@@ -141,13 +146,23 @@ fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u8 {
 #[test]
 fn test_invoke() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
-    let class = frame_test::dummy_class();
-    let method = frame_test::dummy_method();
-    let mut frame = Frame::create(&class, &method);
+    let context = &frame_test::dummy_class();
+    let current_method = &frame_test::dummy_method();
+    let mut frame = Frame {
+        pc: 0,
+        local_variable: vec![0; 100],
+        operand_stack: vec![],
+        context,
+        current_method,
+    };
 
     let result = _invoke(&mut frame, &code);
 
     assert_eq!(result, 3);
+    assert_eq!(frame.pc, 7);
+    // istore_n save local value to 1
+    assert_eq!(frame.local_variable[1], 1);
+    assert_eq!(frame.local_variable[2], 2);
 }
 
 #[cfg(test)]
