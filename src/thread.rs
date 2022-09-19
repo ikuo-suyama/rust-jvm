@@ -1,7 +1,7 @@
 use crate::binary::debug_bytes;
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
-use crate::interpreter::_invoke;
+use crate::interpreter::interpret;
 use crate::JVM;
 
 pub struct Thread<'a> {
@@ -21,7 +21,7 @@ impl<'a> Thread<'a> {
         self.push_frame(frame);
         let frame = self.get_current_frame();
 
-        frame.invoke();
+        interpret(frame);
     }
 
     pub fn push_frame<'b>(&'b mut self, frame: Frame<'a>) {
@@ -54,12 +54,5 @@ impl<'a> Frame<'a> {
             context,
             current_method,
         }
-    }
-
-    pub fn invoke(&mut self) {
-        let code = &self.current_method.get_code_attribute().code;
-        debug_bytes(code);
-
-        _invoke(self, code);
     }
 }
