@@ -44,7 +44,7 @@ impl JVM {
 
         let main_method = find_main(class);
 
-        let thread = Thread::create();
+        let mut thread = Thread::create();
         thread.run(class, main_method);
     }
 }

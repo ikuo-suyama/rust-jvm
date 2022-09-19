@@ -2,6 +2,7 @@ use crate::binary::debug_bytes;
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
 use crate::interpreter::_invoke;
+use crate::JVM;
 
 pub struct Thread<'a> {
     java_virtual_machine_stack: Vec<Frame<'a>>,
@@ -14,14 +15,23 @@ impl<'a> Thread<'a> {
         }
     }
 
-    pub fn run(mut self, context: &'a Class, current_method: &'a MethodInfo) {
+    pub fn run(&'a mut self, context: &'a Class, current_method: &'a MethodInfo) {
         let frame = Frame::create(context, current_method);
 
-        self.java_virtual_machine_stack.push(frame);
-        let top = self.java_virtual_machine_stack.len() - 1;
-        let frame = self.java_virtual_machine_stack.get_mut(top).unwrap();
+        self.push_frame(frame);
+        let frame = self.get_current_frame();
 
         frame.invoke();
+    }
+
+    pub fn push_frame<'b>(&'b mut self, frame: Frame<'a>) {
+        self.java_virtual_machine_stack.push(frame);
+    }
+
+    pub fn get_current_frame(&'a mut self) -> &'a mut Frame<'a> {
+        let top = self.java_virtual_machine_stack.len() - 1;
+        let maybe_current_frame = self.java_virtual_machine_stack.get_mut(top);
+        maybe_current_frame.unwrap()
     }
 }
 
