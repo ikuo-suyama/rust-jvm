@@ -7,11 +7,7 @@ use std::collections::HashMap;
 pub struct ClassLoader {}
 
 impl ClassLoader {
-    pub fn load_class<'a>(
-        self,
-        method_area: &'a mut HashMap<String, Class>,
-        class_name: &String,
-    ) -> &'a Class {
+    pub fn load_class(&self, class_name: &String) -> Class {
         let filename = class_name.to_owned() + ".class";
         let binary = match read_binary_file(&filename) {
             Ok(class) => class,
@@ -25,15 +21,8 @@ impl ClassLoader {
         // too messy, turn on when only needed...
         // println!("{:#?}", class_file);
 
-        let class = create_class_from(class_file);
-        register_method_area(method_area, class)
+        create_class_from(class_file)
     }
-}
-
-fn register_method_area(method_area: &mut HashMap<String, Class>, class: Class) -> &Class {
-    let descriptor = class.descriptor.clone();
-    method_area.insert(descriptor.clone(), class);
-    method_area.get(&*descriptor).unwrap()
 }
 
 fn create_class_from(class_file: ClassFile) -> Class {
@@ -56,9 +45,11 @@ fn create_class_from(class_file: ClassFile) -> Class {
         let field_id = format!("{}:{}", field_name, field_descriptor);
         fields.insert(field_id, field);
     }
-    Class {
+    let class = Class {
         descriptor,
         methods,
         fields,
-    }
+    };
+    // println!("[DEBUG] -- {:#?}", class);
+    class
 }

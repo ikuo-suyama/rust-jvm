@@ -3,10 +3,13 @@ use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 use std::fs::read;
 use std::io::Cursor;
+use std::rc::Rc;
 
 // TODO: 1. sprit instruction code to function
 // TODO: 2. create return type for instruction, e.g. CONTINUE/RETURN/INVOKE
-pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
+pub fn interpret(frame: &mut Frame) -> u64 {
+    let code = &frame.current_method.get_code_attribute().code;
+
     let cursor = &mut Cursor::new(code.as_slice());
     let local_variable = &mut frame.local_variable;
     let operand_stack = &mut frame.operand_stack;
@@ -113,17 +116,11 @@ pub fn _invoke(frame: &mut Frame, code: &Vec<u8>) -> u64 {
 #[test]
 fn test_invoke_sum() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
-    let context = &frame_test::dummy_class();
-    let current_method = &frame_test::dummy_method();
-    let mut frame = Frame {
-        pc: 0,
-        local_variable: vec![0; 100],
-        operand_stack: vec![],
-        context,
-        current_method,
-    };
+    let context = frame_test::dummy_class();
+    let mut current_method = frame_test::dummy_method(code);
+    let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
 
-    let result = _invoke(&mut frame, &code);
+    let result = interpret(&mut frame);
 
     assert_eq!(result, 3);
     assert_eq!(frame.pc, 7);
@@ -138,17 +135,11 @@ fn test_invoke_loop() {
         0x03, 0x3b, 0x03, 0x3c, 0x1b, 0x11, 0x27, 0x10, 0xa2, 0x00, 0x0d, 0x1a, 0x1b, 0x60, 0x3b,
         0x84, 0x01, 0x01, 0xa7, 0xff, 0xf2, 0x1a, 0xac,
     ];
-    let context = &frame_test::dummy_class();
-    let current_method = &frame_test::dummy_method();
-    let mut frame = Frame {
-        pc: 0,
-        local_variable: vec![0; 100],
-        operand_stack: vec![],
-        context,
-        current_method,
-    };
+    let context = frame_test::dummy_class();
+    let current_method = frame_test::dummy_method(code);
+    let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
 
-    let result = _invoke(&mut frame, &code);
+    let result = interpret(&mut frame);
 
     assert_eq!(result, 49995000)
 }
@@ -156,7 +147,7 @@ fn test_invoke_loop() {
 #[cfg(test)]
 mod frame_test {
     use crate::class::Class;
-    use crate::class_attributes::MethodInfo;
+    use crate::class_attributes::{AttributeInfo, CodeAttributeInfo, MethodInfo};
     use std::collections::HashMap;
 
     pub fn dummy_class() -> Class {
@@ -167,13 +158,28 @@ mod frame_test {
         }
     }
 
-    pub fn dummy_method() -> MethodInfo {
+    pub fn dummy_method(code: Vec<u8>) -> MethodInfo {
         MethodInfo {
             access_flags: 0,
             name_index: 0,
             descriptor_index: 0,
+            attributes_count: 1,
+            attributes: vec![dummy_code(code)],
+        }
+    }
+
+    pub fn dummy_code(code: Vec<u8>) -> AttributeInfo {
+        AttributeInfo::CodeAttributeInfo(CodeAttributeInfo {
+            attribute_name_index: 0,
+            attribute_length: 0,
+            max_stack: 100,
+            max_locals: 100,
+            code_length: 0,
+            code,
+            exception_table_length: 0,
+            exception_table: vec![],
             attributes_count: 0,
             attributes: vec![],
-        }
+        })
     }
 }
