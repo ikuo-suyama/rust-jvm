@@ -8,7 +8,7 @@ pub struct ClassLoader {}
 
 impl ClassLoader {
     pub fn load_class<'a>(
-        self,
+        &self,
         method_area: &'a mut HashMap<String, Class>,
         class_name: &String,
     ) -> &'a Class {

@@ -3,11 +3,41 @@ use std::collections::HashMap;
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
 use crate::class_loader::ClassLoader;
-use crate::thread::Thread;
+use crate::interpreter::interpret;
+use crate::main;
+use crate::thread::{Frame, Thread};
 
 pub struct JVM {
     method_area: HashMap<String, Class>,
     boot_loader: ClassLoader,
+}
+
+trait Interpreter {
+    fn interpret<'a>(
+        &'a self,
+        thread: &'a mut Thread<'a>,
+        context: &'a Class,
+        method: &'a MethodInfo,
+    ) {
+    }
+}
+
+impl Interpreter for JVM {
+    fn interpret<'a>(
+        &'a self,
+        thread: &'a mut Thread<'a>,
+        context: &'a Class,
+        method: &'a MethodInfo,
+    ) {
+        let frame: Frame<'a> = Frame::create(context, method);
+
+        thread.java_virtual_machine_stack.push(frame);
+
+        let top = thread.java_virtual_machine_stack.len() - 1;
+        let frame = thread.java_virtual_machine_stack.get_mut(top).unwrap();
+
+        interpret(frame);
+    }
 }
 
 /// The first primitive JVM. A simple instruction interpreter.
@@ -45,7 +75,17 @@ impl JVM {
         let main_method = find_main(class);
 
         let mut thread = Thread::create();
-        thread.run(class, main_method);
+        // thread.run(class, main_method);
+
+        // self.interpret(&mut thread, &class, &main_method);
+        let frame: Frame = Frame::create(class, main_method);
+
+        thread.java_virtual_machine_stack.push(frame);
+
+        let top = thread.java_virtual_machine_stack.len() - 1;
+        let frame = thread.java_virtual_machine_stack.get_mut(top).unwrap();
+
+        interpret(frame);
     }
 }
 

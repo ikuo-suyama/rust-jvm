@@ -5,7 +5,7 @@ use crate::interpreter::interpret;
 use crate::JVM;
 
 pub struct Thread<'a> {
-    java_virtual_machine_stack: Vec<Frame<'a>>,
+    pub java_virtual_machine_stack: Vec<Frame<'a>>,
 }
 
 impl<'a> Thread<'a> {
