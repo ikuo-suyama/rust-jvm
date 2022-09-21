@@ -1,20 +1,23 @@
 use crate::binary::{read_i16, read_u16, read_u8};
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
+use std::cell::RefCell;
 use std::fs::read;
 use std::io::Cursor;
+use std::rc::Rc;
 
 // TODO: 1. sprit instruction code to function
 // TODO: 2. create return type for instruction, e.g. CONTINUE/RETURN/INVOKE
-pub fn interpret(frame: &mut Frame) -> u64 {
+pub fn interpret(frame: &Frame) -> u64 {
     let code = &frame.current_method.get_code_attribute().code;
 
+    let mut pc = frame.pc.borrow_mut();
     let cursor = &mut Cursor::new(code.as_slice());
-    let local_variable = &mut frame.local_variable;
-    let operand_stack = &mut frame.operand_stack;
+    let mut local_variable = frame.local_variable.borrow_mut();
+    let mut operand_stack = frame.operand_stack.borrow_mut();
 
     let result = loop {
-        frame.pc = cursor.position();
+        *pc = cursor.position();
         let instruction_code = read_u8(cursor);
         let instruction = Instruction::from(instruction_code);
         // println!(
@@ -115,23 +118,17 @@ pub fn interpret(frame: &mut Frame) -> u64 {
 #[test]
 fn test_invoke_sum() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
-    let context = &frame_test::dummy_class();
-    let mut current_method = &frame_test::dummy_method(code);
-    let mut frame = Frame {
-        pc: 0,
-        local_variable: vec![0; 100],
-        operand_stack: vec![],
-        context,
-        current_method,
-    };
+    let context = frame_test::dummy_class();
+    let current_method = frame_test::dummy_method(code);
+    let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
 
     let result = interpret(&mut frame);
 
     assert_eq!(result, 3);
-    assert_eq!(frame.pc, 7);
+    assert_eq!(*frame.pc.get_mut(), 7);
     // istore_n save local value to 1
-    assert_eq!(frame.local_variable[1], 1);
-    assert_eq!(frame.local_variable[2], 2);
+    assert_eq!(frame.local_variable.borrow()[1], 1);
+    assert_eq!(frame.local_variable.borrow()[2], 2);
 }
 
 #[test]
@@ -140,15 +137,9 @@ fn test_invoke_loop() {
         0x03, 0x3b, 0x03, 0x3c, 0x1b, 0x11, 0x27, 0x10, 0xa2, 0x00, 0x0d, 0x1a, 0x1b, 0x60, 0x3b,
         0x84, 0x01, 0x01, 0xa7, 0xff, 0xf2, 0x1a, 0xac,
     ];
-    let context = &frame_test::dummy_class();
-    let current_method = &frame_test::dummy_method(code);
-    let mut frame = Frame {
-        pc: 0,
-        local_variable: vec![0; 100],
-        operand_stack: vec![],
-        context,
-        current_method,
-    };
+    let context = frame_test::dummy_class();
+    let current_method = frame_test::dummy_method(code);
+    let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
 
     let result = interpret(&mut frame);
 
@@ -183,8 +174,8 @@ mod frame_test {
         AttributeInfo::CodeAttributeInfo(CodeAttributeInfo {
             attribute_name_index: 0,
             attribute_length: 0,
-            max_stack: 0,
-            max_locals: 0,
+            max_stack: 100,
+            max_locals: 100,
             code_length: 0,
             code,
             exception_table_length: 0,
