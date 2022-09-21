@@ -1,4 +1,5 @@
 use std::io::Cursor;
+use std::rc::Rc;
 
 use crate::binary::{read_binary_file, read_u16, read_u32};
 use crate::class_attributes::{
@@ -22,9 +23,9 @@ pub struct ClassFile {
     pub interfaces_count: u16,
     pub interfaces: Vec<u16>,
     pub fields_count: u16,
-    pub fields: Vec<FieldInfo>,
+    pub fields: Vec<Rc<FieldInfo>>,
     pub methods_count: u16,
-    pub methods: Vec<MethodInfo>,
+    pub methods: Vec<Rc<MethodInfo>>,
     pub attributes_count: u16,
     pub attributes: Vec<AttributeInfo>,
 }
