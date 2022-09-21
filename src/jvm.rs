@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::class::Class;
 use crate::class_attributes::MethodInfo;
@@ -72,20 +73,20 @@ impl JVM {
 
         let class = self.boot_loader.load_class(&args[0]);
         // let class =register_method_area(&self.method_area, class);
+        let main_method = find_main(&class);
 
-        // let main_method = find_main(class);
-        //
-        // let mut thread = Thread::create();
+        let mut thread = Thread::create();
 
         // self.interpret(&mut thread, &class, &main_method);
-        // let frame: Frame = Frame::create(class, main_method);
+        let class_ref = Rc::new(class);
+        let mut frame: Frame = Frame::create(&class_ref, &main_method);
 
         // thread.java_virtual_machine_stack.push(frame);
         //
         // let top = thread.java_virtual_machine_stack.len() - 1;
         // let frame = thread.java_virtual_machine_stack.get_mut(top).unwrap();
 
-        // interpret(frame);
+        interpret(&mut frame);
     }
 }
 
@@ -93,10 +94,11 @@ impl JVM {
 /// fetch target method as main for now
 static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:()I";
 
-fn find_main(class: &Class) -> &MethodInfo {
-    &class.methods
+fn find_main(class: &Class) -> Rc<MethodInfo> {
+    let method_ref = class.methods
         .get(MAIN_METHOD_NAME_DESCRIPTOR)
-        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)")
+        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
+    Rc::clone(method_ref)
 }
 
 // fn register_method_area(method_area: &RefCell<HashMap<String, Class>>, class: Class) -> &Class {
