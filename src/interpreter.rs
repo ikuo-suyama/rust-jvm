@@ -1,23 +1,21 @@
 use crate::binary::{read_i16, read_u16, read_u8};
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
-use std::cell::RefCell;
 use std::fs::read;
 use std::io::Cursor;
 use std::rc::Rc;
 
 // TODO: 1. sprit instruction code to function
 // TODO: 2. create return type for instruction, e.g. CONTINUE/RETURN/INVOKE
-pub fn interpret(frame: &Frame) -> u64 {
+pub fn interpret(frame: &mut Frame) -> u64 {
     let code = &frame.current_method.get_code_attribute().code;
 
-    let mut pc = frame.pc.borrow_mut();
     let cursor = &mut Cursor::new(code.as_slice());
-    let mut local_variable = frame.local_variable.borrow_mut();
-    let mut operand_stack = frame.operand_stack.borrow_mut();
+    let local_variable = &mut frame.local_variable;
+    let operand_stack = &mut frame.operand_stack;
 
     let result = loop {
-        *pc = cursor.position();
+        frame.pc = cursor.position();
         let instruction_code = read_u8(cursor);
         let instruction = Instruction::from(instruction_code);
         // println!(
@@ -119,16 +117,16 @@ pub fn interpret(frame: &Frame) -> u64 {
 fn test_invoke_sum() {
     let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
     let context = frame_test::dummy_class();
-    let current_method = frame_test::dummy_method(code);
+    let mut current_method = frame_test::dummy_method(code);
     let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
 
     let result = interpret(&mut frame);
 
     assert_eq!(result, 3);
-    assert_eq!(*frame.pc.get_mut(), 7);
+    assert_eq!(frame.pc, 7);
     // istore_n save local value to 1
-    assert_eq!(frame.local_variable.borrow()[1], 1);
-    assert_eq!(frame.local_variable.borrow()[2], 2);
+    assert_eq!(frame.local_variable[1], 1);
+    assert_eq!(frame.local_variable[2], 2);
 }
 
 #[test]
