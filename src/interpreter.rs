@@ -1,9 +1,16 @@
 use crate::binary::{read_i16, read_u16, read_u8};
 use crate::instruction_set::Instruction;
+use crate::interpreter::Result::Continue;
+use crate::interpreter::Result::Return;
 use crate::thread::Frame;
 use std::fs::read;
 use std::io::Cursor;
 use std::rc::Rc;
+
+enum Result {
+    Return(u64),
+    Continue,
+}
 
 // TODO: 1. sprit instruction code to function
 // TODO: 2. create return type for instruction, e.g. CONTINUE/RETURN/INVOKE
@@ -22,41 +29,50 @@ pub fn interpret(frame: &mut Frame) -> u64 {
         //     "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
         //     frame.pc, instruction, instruction_code
         // );
-        match instruction {
+        let result = match instruction {
             Instruction::ICONST_0 => {
                 operand_stack.push(0);
+                Continue
             }
             Instruction::ICONST_1 => {
                 operand_stack.push(1);
+                Continue
             }
             Instruction::ICONST_2 => {
                 operand_stack.push(2);
+                Continue
             }
 
             Instruction::ISTORE_0 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[0] = val;
+                Continue
             }
             Instruction::ISTORE_1 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[1] = val;
+                Continue
             }
             Instruction::ISTORE_2 => {
                 let val = operand_stack.pop().unwrap();
                 local_variable[2] = val;
+                Continue
             }
 
             Instruction::ILOAD_0 => {
                 let val = local_variable[0];
                 operand_stack.push(val);
+                Continue
             }
             Instruction::ILOAD_1 => {
                 let val = local_variable[1];
                 operand_stack.push(val);
+                Continue
             }
             Instruction::ILOAD_2 => {
                 let val = local_variable[2];
                 operand_stack.push(val);
+                Continue
             }
 
             Instruction::IADD => {
@@ -65,12 +81,14 @@ pub fn interpret(frame: &mut Frame) -> u64 {
 
                 let result = val1 + val2;
                 operand_stack.push(result);
+                Continue
             }
 
             Instruction::SIPUSH => {
                 // TODO: handle type...
                 let val = read_u16(cursor);
                 operand_stack.push(val as u64);
+                Continue
             }
 
             Instruction::IINC => {
@@ -78,6 +96,7 @@ pub fn interpret(frame: &mut Frame) -> u64 {
                 let const_val = read_u8(cursor);
 
                 local_variable[index as usize] += const_val as u64;
+                Continue
             }
 
             Instruction::IF_ICMPGE => {
@@ -89,6 +108,7 @@ pub fn interpret(frame: &mut Frame) -> u64 {
                 if val1 >= val2 {
                     cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
                 }
+                Continue
             }
 
             Instruction::GOTO => {
@@ -96,17 +116,22 @@ pub fn interpret(frame: &mut Frame) -> u64 {
                 let current_pc = cursor.position() - 1;
                 let next_pc_offset = read_i16(cursor);
                 cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
+                Continue
             }
 
             Instruction::IRETURN => {
                 let val = operand_stack.pop().unwrap();
-                break val;
+                Return(val)
             }
             _ => panic!(
                 "Instruction {:#?}(0x{:x}) isn't implemented yet",
                 instruction, instruction_code
             ),
         };
+        match result {
+            Continue => {}
+            Return(v) => break v,
+        }
     };
 
     println!("Hello, jvm! the result is: {}", result);
