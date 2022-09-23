@@ -6,8 +6,10 @@ mod class_attributes;
 mod class_file;
 mod class_loader;
 mod cp_info;
+mod instruction;
 mod instruction_set;
 mod interpreter;
+mod invoke;
 mod jvm;
 mod thread;
 
