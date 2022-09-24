@@ -9,6 +9,7 @@ mod cp_info;
 mod instruction;
 mod instruction_set;
 mod interpreter;
+mod invoke;
 mod jvm;
 mod thread;
 

@@ -8,6 +8,7 @@ use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 
 use crate::instruction::Result::Return;
+use crate::JVM;
 
 pub fn interpret(frame: &mut Frame) -> u64 {
     let code = &frame.current_method.get_code_attribute().code;
@@ -64,7 +65,7 @@ fn test_invoke_loop() {
 }
 
 #[cfg(test)]
-mod frame_test {
+pub mod frame_test {
     use std::collections::HashMap;
 
     use crate::class::Class;
