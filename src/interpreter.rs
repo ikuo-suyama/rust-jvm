@@ -74,6 +74,7 @@ pub mod frame_test {
     pub fn dummy_class() -> Class {
         Class {
             descriptor: "dummy".to_string(),
+            constant_pool: vec![],
             methods: HashMap::new(),
             fields: HashMap::new(),
         }
