@@ -3,43 +3,44 @@ use crate::class::Class;
 use crate::class_attributes::MethodInfo;
 use crate::interpreter::interpret;
 use crate::JVM;
-use std::cell::{RefCell, RefMut};
+use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 
 pub struct Thread {
-    pub java_virtual_machine_stack: RefCell<Vec<RefCell<Frame>>>,
+    /// If we want to push current frame to the stack,
+    /// It means we need multiple-ref and mut.
+    /// Then use Rc<RefCell<T>
+    pub java_virtual_machine_stack: Vec<Rc<RefCell<Frame>>>,
 }
 
 impl Thread {
     pub fn create() -> Self {
         Thread {
-            java_virtual_machine_stack: RefCell::new(vec![]),
+            java_virtual_machine_stack: vec![],
         }
     }
 }
 
 pub trait JavaVirtualMachineStack {
-    fn push_frame(&self, frame: Frame);
-    fn pop_frame(&self) -> Frame;
-    fn get_current_frame(&self) -> &RefCell<Frame>;
+    fn push_frame(&mut self, frame: Frame);
+    fn pop_frame(&mut self) -> Rc<RefCell<Frame>>;
+    fn get_current_frame(&self) -> Rc<RefCell<Frame>>;
 }
 
 impl JavaVirtualMachineStack for Thread {
-    fn push_frame(&self, frame: Frame) {
-        let mut frame_stack = self.java_virtual_machine_stack.borrow_mut();
-        frame_stack.push(RefCell::new(frame));
+    fn push_frame(&mut self, frame: Frame) {
+        let frame_ref = Rc::new(RefCell::new(frame));
+        self.java_virtual_machine_stack.push(frame_ref);
     }
 
-    fn pop_frame(&self) -> Frame {
-        let mut frame_stack = self.java_virtual_machine_stack.borrow_mut();
-        frame_stack.pop().unwrap().into_inner()
+    fn pop_frame(&mut self) -> Rc<RefCell<Frame>> {
+        self.java_virtual_machine_stack.pop().unwrap()
     }
 
-    fn get_current_frame(&self) -> &RefCell<Frame> {
-        self.java_virtual_machine_stack
-            .borrow_mut()
-            .last()
-            .expect("")
+    fn get_current_frame(&self) -> Rc<RefCell<Frame>> {
+        let frame_ref = self.java_virtual_machine_stack.last().unwrap();
+
+        Rc::clone(frame_ref)
     }
 }
 
