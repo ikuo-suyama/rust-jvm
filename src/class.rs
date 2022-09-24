@@ -6,9 +6,10 @@ use crate::cp_info::constant_pool_value_at;
 
 #[derive(Debug)]
 pub struct MethodRef {
-    class: String,
-    name: String,
-    descriptor: String,
+    pub class: String,
+    pub name: String,
+    pub descriptor: String,
+    pub name_and_descriptor: String,
 }
 
 impl MethodRef {
@@ -20,6 +21,7 @@ impl MethodRef {
             class: String::from(class_and_method[0]),
             name: String::from(name_and_descriptor[0]),
             descriptor: String::from(name_and_descriptor[1]),
+            name_and_descriptor: String::from(class_and_method[1]),
         }
     }
 }
