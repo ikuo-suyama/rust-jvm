@@ -5,6 +5,26 @@ use crate::class_attributes::{FieldInfo, MethodInfo};
 use crate::cp_info::constant_pool_value_at;
 
 #[derive(Debug)]
+pub struct MethodRef {
+    class: String,
+    name: String,
+    descriptor: String,
+}
+
+impl MethodRef {
+    pub fn parse_from(full_descriptor: String) -> MethodRef {
+        let class_and_method: Vec<&str> = full_descriptor.split(".").collect();
+        let name_and_descriptor: Vec<&str> = full_descriptor.split(":").collect();
+
+        MethodRef {
+            class: String::from(class_and_method[0]),
+            name: String::from(name_and_descriptor[0]),
+            descriptor: String::from(name_and_descriptor[1]),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Class {
     pub descriptor: String,
     pub constant_pool: Vec<String>,
