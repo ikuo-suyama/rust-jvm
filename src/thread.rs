@@ -7,13 +7,13 @@ use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
 pub struct Thread {
-    pub java_virtual_machine_stack: RefCell<Vec<RefCell<Frame>>>,
+    pub java_virtual_machine_stack: Vec<Frame>,
 }
 
 impl Thread {
     pub fn create() -> Self {
         Thread {
-            java_virtual_machine_stack: RefCell::new(vec![]),
+            java_virtual_machine_stack: vec![],
         }
     }
 }

@@ -13,6 +13,7 @@ pub fn invoke_static(
     methodref_cp_index: u16,
 ) {
     // 0. class lookup
+    // TODO: from ClassLoader
     let class = &current_frame.context;
 
     // 1. constantpool lookup
@@ -26,17 +27,22 @@ pub fn invoke_static(
         .expect(format!("Method Not Found: {}", method_ref.name_and_descriptor).as_str());
 
     // 3. pop arguments val from current frame operand_stack
+    // TODO:
 
     // 4. create new frame, push arguments as local_val
-    let invoked_frame = Frame::create(class, method_info);
+    let mut invoked_frame = Frame::create(class, method_info);
 
     // 5. push to java_stack
-    // frame_stack.push_frame(invoked_frame);
+    thread.java_virtual_machine_stack.push(invoked_frame);
 }
 
-pub fn i_return(frame_stack: &mut Vec<RefCell<Frame>>, current_frame: &mut Frame) {
+pub fn i_return(thread: &mut Thread, current_frame: &mut Frame) {
     // 1. pop from current frame operand stack
-    // 2. pop frame from frame_stack
+    let return_value = current_frame.operand_stack.pop();
+
+    // 2. pop current frame from frame_stack
+    thread.java_virtual_machine_stack.pop();
+
     // 3. get previous frame as invoker
     // 4. push returned value to invoker frame
     // 5. resume interprit
@@ -47,7 +53,7 @@ pub fn test_invoke_static() {
     use crate::interpreter::frame_test::{dummy_class, dummy_method};
 
     // let class_loader = ClassLoader {};
-    let mut frame_stack: Vec<RefCell<Frame>> = vec![];
+    let mut thread = Thread::create();
 
     let mut class = dummy_class();
     let full_method_name = String::from("Dummy.main:()I");
@@ -63,10 +69,12 @@ pub fn test_invoke_static() {
     let mut current_frame = Frame::create(&Rc::new(class), &Rc::clone(&method_info));
     let mr_index: u16 = 1;
 
-    // invoke_static(
-    //     // &class_loader,
-    //     &mut frame_stack,
-    //     &mut current_frame,
-    //     mr_index,
-    // )
+    invoke_static(
+        // &class_loader,
+        &mut thread,
+        &mut current_frame,
+        mr_index,
+    );
+
+    assert_eq!(thread.java_virtual_machine_stack.len(), 1);
 }
