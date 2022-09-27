@@ -5,29 +5,33 @@ use std::rc::Rc;
 use crate::binary::{read_i16, read_u16, read_u8};
 use crate::instruction::instruction;
 use crate::instruction_set::Instruction;
-use crate::thread::Frame;
+use crate::thread::{Frame, Thread};
 
 use crate::instruction::Result::Return;
 use crate::JVM;
 
-pub fn interpret(frame: &mut Frame) -> u64 {
-    let code = &frame.current_method.get_code_attribute().code;
-    let cursor = &mut Cursor::new(code.as_slice());
-    let local_variable = &mut frame.local_variable;
-    let operand_stack = &mut frame.operand_stack;
+pub fn interpret(thread: &mut Thread) -> u64 {
+    while thread.java_virtual_machine_stack.len() >= 1 {
+        let frame = thread.java_virtual_machine_stack.last_mut().unwrap();
 
-    let result = loop {
+        let code = &frame.current_method.get_code_attribute().code;
+        let cursor = &mut Cursor::new(code.as_slice());
+        let local_variable = &mut frame.local_variable;
+        let operand_stack = &mut frame.operand_stack;
+
         frame.pc = cursor.position();
         let instruction_code = read_u8(cursor);
         // println!(
         //     "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
         //     frame.pc, instruction, instruction_code
         // );
+
+        // pass frame itself, also loop inside instruction. only return when invoke_xxxx / return
         match instruction(cursor, instruction_code, local_variable, operand_stack) {
             Return(v) => break v,
             _ => {}
         }
-    };
+    }
 
     println!("Hello, jvm! the result is: {}", result);
     result
