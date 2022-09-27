@@ -1,10 +1,9 @@
-use crate::class::Class;
-use crate::class_attributes::AttributeInfo::CodeAttributeInfo;
-use crate::class_attributes::{AttributeInfo, FieldInfo, MethodInfo};
-use crate::class_file::ClassFile;
-use crate::class_loader::ClassLoader;
-use crate::thread::Frame;
 use std::collections::HashMap;
+
+use crate::class::Class;
+use crate::class_attributes::MethodInfo;
+use crate::class_loader::ClassLoader;
+use crate::thread::Thread;
 
 pub struct JVM {
     method_area: HashMap<String, Class>,
@@ -43,20 +42,19 @@ impl JVM {
         let class = self.boot_loader.load_class(&mut self.method_area, &args[0]);
         // println!("[DEBUG] -- {:#?}", class);
 
-        let code = find_main(class);
+        let main_method = find_main(class);
 
-        let frame = Frame {};
-        frame.invoke(code);
+        let thread = Thread::create();
+        thread.run(class, main_method);
     }
 }
 
 // static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
 /// fetch target method as main for now
-static MAIN_METHOD_NAME_DESCRIPTOR: &str = "sum:()I";
+static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:()I";
 
-fn find_main(class: &Class) -> &Vec<u8> {
-    let main_method = &class.methods
+fn find_main(class: &Class) -> &MethodInfo {
+    &class.methods
         .get(MAIN_METHOD_NAME_DESCRIPTOR)
-        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
-    &main_method.get_code_attribute().code
+        .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)")
 }

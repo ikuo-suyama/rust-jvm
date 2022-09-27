@@ -2,8 +2,7 @@ use std::io::Cursor;
 
 use crate::binary::{read_to, read_u16, read_u32};
 use crate::class_attributes::PredefinedAttributes::Code;
-use crate::class_file::ClassFile;
-use crate::cp_info::{constant_pool_value_at, CpInfo, CP_TAGES};
+use crate::cp_info::{constant_pool_value_at, CpInfo};
 
 #[derive(Debug)]
 pub struct FieldInfo {

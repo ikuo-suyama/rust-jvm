@@ -1,108 +1,55 @@
-// use std::cell::Cell;
-// use std::cell::RefCell;
+use crate::binary::debug_bytes;
+use crate::class::Class;
+use crate::class_attributes::MethodInfo;
+use crate::interpreter::_invoke;
 
-// Instructions
-const ICONST_1: u8 = 0x04;
-const ICONST_2: u8 = 0x05;
+pub struct Thread<'a> {
+    java_virtual_machine_stack: Vec<Frame<'a>>,
+}
 
-const ISTORE_0: u8 = 0x3b;
-const ISTORE_1: u8 = 0x3C;
-const ISTORE_2: u8 = 0x3d;
+impl<'a> Thread<'a> {
+    pub fn create() -> Self {
+        Thread {
+            java_virtual_machine_stack: vec![],
+        }
+    }
 
-const ILOAD_0: u8 = 0x1a;
-const ILOAD_1: u8 = 0x1b;
-const ILOAD_2: u8 = 0x1c;
+    pub fn run(mut self, context: &'a Class, current_method: &'a MethodInfo) {
+        let frame = Frame::create(context, current_method);
 
-const IADD: u8 = 0x60;
+        self.java_virtual_machine_stack.push(frame);
+        let top = self.java_virtual_machine_stack.len() - 1;
+        let frame = self.java_virtual_machine_stack.get_mut(top).unwrap();
 
-const IRETURN: u8 = 0xac;
-
-// pub struct Thread {
-//     pc: Cell<u64>,
-//     java_virtual_machine_stack: RefCell<Vec<Frame>>
-// }
-
-pub struct Frame {}
-
-impl Frame {
-    pub fn invoke(&self, code: &Vec<u8>) -> u8 {
-        let mut pc = 0;
-        let mut local_variable: Vec<u8> = vec![0, 0, 0];
-        let mut operand_stack: Vec<u8> = Vec::new();
-
-        let result = loop {
-            let instruction = code[pc];
-            println!("[DEBUG] -- pc: {} instruction: {:#04x}", pc, instruction);
-            match instruction {
-                ICONST_1 => {
-                    operand_stack.push(1);
-                    pc += 1;
-                }
-                ICONST_2 => {
-                    operand_stack.push(2);
-                    pc += 1;
-                }
-
-                ISTORE_0 => {
-                    let val = operand_stack.pop().unwrap();
-                    local_variable[0] = val;
-                    pc += 1;
-                }
-                ISTORE_1 => {
-                    let val = operand_stack.pop().unwrap();
-                    local_variable[1] = val;
-                    pc += 1;
-                }
-                ISTORE_2 => {
-                    let val = operand_stack.pop().unwrap();
-                    local_variable[2] = val;
-                    pc += 1;
-                }
-
-                ILOAD_0 => {
-                    let val = local_variable[0];
-                    operand_stack.push(val);
-                    pc += 1;
-                }
-                ILOAD_1 => {
-                    let val = local_variable[1];
-                    operand_stack.push(val);
-                    pc += 1;
-                }
-                ILOAD_2 => {
-                    let val = local_variable[2];
-                    operand_stack.push(val);
-                    pc += 1;
-                }
-
-                IADD => {
-                    let val1 = operand_stack.pop().unwrap();
-                    let val2 = operand_stack.pop().unwrap();
-
-                    let result = val1 + val2;
-                    operand_stack.push(result);
-                    pc += 1;
-                }
-
-                IRETURN => {
-                    let val = operand_stack.pop().unwrap();
-                    break val;
-                }
-                _ => panic!("Instruction 0x{:x} doesn't implement yet", instruction),
-            };
-        };
-
-        println!("Hello, jvm! the result is: {}", result);
-        result
+        frame.invoke();
     }
 }
 
-#[test]
-fn test_invoke() {
-    let code: Vec<u8> = vec![0x04, 0x3C, 0x05, 0x3D, 0x1B, 0x1C, 0x60, 0xAC];
-    let frame = Frame {};
+#[derive(Debug)]
+pub struct Frame<'a> {
+    pub pc: u64,
+    pub local_variable: Vec<u64>,
+    pub operand_stack: Vec<u64>,
+    pub context: &'a Class,
+    pub current_method: &'a MethodInfo,
+}
 
-    let result = frame.invoke(&code);
+impl<'a> Frame<'a> {
+    pub fn create(context: &'a Class, current_method: &'a MethodInfo) -> Self {
+        let max_locals = current_method.get_code_attribute().max_locals;
+        Frame {
+            pc: 0,
+            local_variable: vec![0; max_locals as usize],
+            operand_stack: vec![],
+            context,
+            current_method,
+        }
+    }
 
-    assert_eq!(result, 3);
+    pub fn invoke(&mut self) {
+        let code = &self.current_method.get_code_attribute().code;
+        debug_bytes(code);
+
+        _invoke(self, code);
+    }
 }

@@ -11,6 +11,14 @@ pub fn read_binary_file(filename: &String) -> Result<Vec<u8>, io::Error> {
     return Ok(buffer);
 }
 
+pub fn read_i8(cursor: &mut Cursor<&[u8]>) -> i8 {
+    read_u8(cursor) as i8
+}
+
+pub fn read_i16(cursor: &mut Cursor<&[u8]>) -> i16 {
+    read_u16(cursor) as i16
+}
+
 pub fn read_u8(cursor: &mut Cursor<&[u8]>) -> u8 {
     let buf: &mut [u8] = &mut [0; 1];
     cursor.read_exact(buf).unwrap();
@@ -51,6 +59,26 @@ pub fn read_to(cursor: &mut Cursor<&[u8]>, length: usize) -> Vec<u8> {
     let buf: &mut [u8] = &mut vec![0; length];
     cursor.read_exact(buf).unwrap();
     buf.to_owned()
+}
+
+pub fn debug_bytes(bytes: &Vec<u8>) {
+    let s: String = bytes
+        .iter()
+        .map(|byte| format!("0x{:02x}, ", byte))
+        .collect();
+    println!("[DEBUG] -- [{}]", s);
+}
+
+#[test]
+fn test_read_i8() {
+    // https://towardsdatascience.com/unsinged-signed-integers-and-casting-in-rust-9a847bfc398f
+    let bytes: &[u8] = &[0b10000000];
+    println!("{:b}", bytes[0]);
+    let mut cursor = Cursor::new(bytes);
+
+    let result = read_i8(&mut cursor);
+
+    assert_eq!(result, -128);
 }
 
 #[test]

@@ -54,7 +54,7 @@ fn create_class_from(class_file: ClassFile) -> Class {
         let field_descriptor =
             constant_pool_value_at(&class_file.constant_pool, field.descriptor_index);
         let field_id = format!("{}:{}", field_name, field_descriptor);
-        fields.insert(field_name, field);
+        fields.insert(field_id, field);
     }
     Class {
         descriptor,

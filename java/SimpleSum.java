@@ -1,8 +1,8 @@
 public class SimpleSum {
     public static void main(String[] args) {
-        System.out.println(sum());
+        System.out.println(main());
     }
-    public static int sum() {
+    public static int main() {
         int a = 1;
         int b = 2;
         return a + b;

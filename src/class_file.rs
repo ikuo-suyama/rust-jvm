@@ -1,11 +1,11 @@
-use crate::binary::{read_binary_file, read_to, read_u16, read_u32};
+use std::io::Cursor;
+
+use crate::binary::{read_binary_file, read_u16, read_u32};
 use crate::class_attributes::{
     parse_attributes, parse_fields, parse_interfaces, parse_methods, AttributeInfo, FieldInfo,
     MethodInfo,
 };
-use crate::cp_info::{constant_pool_value_at, parse_cp_info, CpInfo};
-use std::collections::HashMap;
-use std::io::Cursor;
+use crate::cp_info::{parse_cp_info, CpInfo};
 
 #[derive(Default, Debug)]
 pub struct ClassFile {
@@ -80,7 +80,7 @@ fn test_parse_class() {
     assert_eq!(result.magic, 0xCAFEBABE_u32);
     assert_eq!(result.minor_version, 0);
     assert_eq!(result.major_version, 61);
-    assert_eq!(result.constant_pool_count, 31);
+    assert_eq!(result.constant_pool_count, 30);
     assert_eq!(
         result.constant_pool.len(),
         (result.constant_pool_count - 1) as usize

@@ -1,6 +1,6 @@
-use crate::class_attributes::{FieldInfo, MethodInfo};
-use crate::class_file::ClassFile;
 use std::collections::HashMap;
+
+use crate::class_attributes::{FieldInfo, MethodInfo};
 
 #[derive(Debug)]
 pub struct Class {
