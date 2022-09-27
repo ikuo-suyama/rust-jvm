@@ -18,31 +18,6 @@ impl Thread {
     }
 }
 
-pub trait JavaVirtualMachineStack {
-    fn push_frame(&self, frame: Frame);
-    fn pop_frame(&self) -> Frame;
-    fn get_current_frame(&self) -> &RefCell<Frame>;
-}
-
-impl JavaVirtualMachineStack for Thread {
-    fn push_frame(&self, frame: Frame) {
-        let mut frame_stack = self.java_virtual_machine_stack.borrow_mut();
-        frame_stack.push(RefCell::new(frame));
-    }
-
-    fn pop_frame(&self) -> Frame {
-        let mut frame_stack = self.java_virtual_machine_stack.borrow_mut();
-        frame_stack.pop().unwrap().into_inner()
-    }
-
-    fn get_current_frame(&self) -> &RefCell<Frame> {
-        self.java_virtual_machine_stack
-            .borrow_mut()
-            .last()
-            .expect("")
-    }
-}
-
 #[derive(Debug)]
 pub struct Frame {
     pub pc: u64,

@@ -2,14 +2,13 @@ use crate::class::MethodRef;
 use crate::class_loader::ClassLoader;
 use crate::cp_info::constant_pool_value_at;
 use crate::interpreter::interpret;
-use crate::thread::{Frame, JavaVirtualMachineStack, Thread};
-use std::borrow::BorrowMut;
+use crate::thread::{Frame, Thread};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 pub fn invoke_static(
     // class_loader: &ClassLoader,
-    frame_stack: &dyn JavaVirtualMachineStack,
+    thread: &mut Thread,
     current_frame: &mut Frame,
     methodref_cp_index: u16,
 ) {
@@ -32,11 +31,7 @@ pub fn invoke_static(
     let invoked_frame = Frame::create(class, method_info);
 
     // 5. push to java_stack
-    frame_stack.push_frame(invoked_frame);
-    let frame_mut = frame_stack.get_current_frame();
-
-    // 6. interprit
-    interpret(frame_mut.borrow_mut());
+    // frame_stack.push_frame(invoked_frame);
 }
 
 pub fn i_return(frame_stack: &mut Vec<RefCell<Frame>>, current_frame: &mut Frame) {
@@ -68,10 +63,10 @@ pub fn test_invoke_static() {
     let mut current_frame = Frame::create(&Rc::new(class), &Rc::clone(&method_info));
     let mr_index: u16 = 1;
 
-    invoke_static(
-        // &class_loader,
-        &mut frame_stack,
-        &mut current_frame,
-        mr_index,
-    )
+    // invoke_static(
+    //     // &class_loader,
+    //     &mut frame_stack,
+    //     &mut current_frame,
+    //     mr_index,
+    // )
 }
