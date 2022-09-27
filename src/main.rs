@@ -1,5 +1,3 @@
-extern crate core;
-
 mod binary;
 mod class;
 mod class_attributes;

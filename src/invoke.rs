@@ -36,9 +36,6 @@ pub fn invoke_static(
     frame_stack.push_frame(invoked_frame);
     let frame_ref = frame_stack.get_current_frame();
     let mut frame_mut = frame_ref.deref().borrow_mut();
-
-    // 6. interprit
-    // interpret(&frame_ref);
 }
 
 pub fn i_return(frame_stack: &mut Vec<RefCell<Frame>>, current_frame: &mut Frame) {
@@ -46,7 +43,6 @@ pub fn i_return(frame_stack: &mut Vec<RefCell<Frame>>, current_frame: &mut Frame
     // 2. pop frame from frame_stack
     // 3. get previous frame as invoker
     // 4. push returned value to invoker frame
-    // 5. resume interprit
 }
 
 #[test]

@@ -1,5 +1,8 @@
+use std::borrow::BorrowMut;
+use std::cell::{RefCell, RefMut};
 use std::fs::read;
 use std::io::Cursor;
+use std::ops::Deref;
 use std::rc::Rc;
 
 use crate::binary::{read_i16, read_u16, read_u8};
@@ -9,6 +12,27 @@ use crate::thread::Frame;
 
 use crate::instruction::Result::Return;
 use crate::JVM;
+
+pub fn interpret_with(frame: RefCell<Frame>) {
+    let code = &frame.current_method.get_code_attribute().code;
+    let cursor = &mut Cursor::new(code.as_slice());
+    let local_variable = &mut frame.local_variable;
+    let operand_stack = &mut frame.operand_stack;
+    let result = loop {
+        frame.pc = cursor.position();
+        let instruction_code = read_u8(&mut cursor);
+        // println!(
+        //     "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
+        //     frame.pc, instruction, instruction_code
+        // );
+        match instruction(&mut cursor, instruction_code, local_variable, operand_stack) {
+            Return(v) => break v,
+            _ => {}
+        }
+    };
+
+    println!("Hello, jvm! the result is: {}", result);
+}
 
 pub fn interpret(frame: &mut Frame) -> u64 {
     let code = &frame.current_method.get_code_attribute().code;
