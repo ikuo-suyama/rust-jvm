@@ -87,13 +87,18 @@ impl JVM {
     }
 }
 
-// static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
+static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
 /// fetch target method as main for now
-static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:()I";
+static STUB_MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:()I";
 
 fn find_main(class: &Class) -> Rc<MethodInfo> {
-    let method_ref = class.methods
-        .get(MAIN_METHOD_NAME_DESCRIPTOR)
+    // TODO: keep backward compatibility by STUB_MAIN_METHOD_NAME_DESCRIPTOR. remove this later
+    let stub_method_ref = class.methods.get(STUB_MAIN_METHOD_NAME_DESCRIPTOR);
+    let main_method_ref = class.methods.get(MAIN_METHOD_NAME_DESCRIPTOR);
+
+    let method_ref = stub_method_ref
+        .or(main_method_ref)
         .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
+
     Rc::clone(method_ref)
 }
