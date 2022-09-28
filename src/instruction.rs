@@ -1,10 +1,16 @@
 use crate::binary::{read_i16, read_u16, read_u8};
-use crate::instruction::Result::Return;
+use crate::instruction::Invokes::InvokeStatic;
+use crate::instruction::Result::{Invoke, Return};
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 use std::io::Cursor;
 
+pub enum Invokes {
+    InvokeStatic { cp_index: u16 },
+}
+
 pub enum Result {
+    Invoke(Invokes),
     Return(u64),
 }
 
@@ -24,6 +30,12 @@ pub fn instruction(frame: &mut Frame) -> Result {
 
         let instruction = Instruction::from(instruction_code);
         match instruction {
+            Instruction::BIPUSH => {
+                // TODO: handle type...
+                let val = read_u8(cursor);
+                operand_stack.push(val as u64);
+            }
+
             Instruction::ICONST_0 => {
                 operand_stack.push(0);
             }
@@ -99,6 +111,13 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
             }
 
+            /// invoke
+            Instruction::INVOKESTATIC => {
+                let cp_index = read_u16(cursor);
+                break Invoke(InvokeStatic { cp_index });
+            }
+
+            /// return
             Instruction::IRETURN => {
                 let val = operand_stack.pop().unwrap();
                 break Return(val);
