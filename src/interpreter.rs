@@ -16,7 +16,6 @@ pub fn interpret(thread: &mut Thread) -> u64 {
     while thread.java_virtual_machine_stack.len() >= 1 {
         let frame = thread.java_virtual_machine_stack.last_mut().unwrap();
 
-        // pass frame itself, also loop inside instruction. only return when invoke_xxxx / return
         result = match instruction(frame) {
             Return(v) => v,
             _ => 0,
