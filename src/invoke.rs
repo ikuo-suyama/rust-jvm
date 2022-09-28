@@ -53,7 +53,7 @@ pub fn i_return(thread: &mut Thread) {
 
 #[test]
 pub fn test_invoke_static() {
-    use crate::interpreter::frame_test::{dummy_class, dummy_method};
+    use crate::instruction::frame_test::{dummy_class, dummy_method};
 
     // let class_loader = ClassLoader {};
     let mut thread = Thread::create();
