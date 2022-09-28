@@ -94,21 +94,18 @@ pub fn instruction(frame: &mut Frame) -> Result {
             }
 
             Instruction::IF_ICMPGE => {
-                let current_pc = cursor.position() - 1;
                 let next_pc_offset = read_i16(cursor);
                 let val2 = operand_stack.pop().unwrap();
                 let val1 = operand_stack.pop().unwrap();
 
                 if val1 >= val2 {
-                    cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
+                    goto_offset(cursor, frame.pc, next_pc_offset);
                 }
             }
 
             Instruction::GOTO => {
-                // TODO! unsigned offset calc is suck
-                let current_pc = cursor.position() - 1;
                 let next_pc_offset = read_i16(cursor);
-                cursor.set_position((current_pc as i64 + next_pc_offset as i64) as u64);
+                goto_offset(cursor, frame.pc, next_pc_offset);
             }
 
             /// invoke
@@ -128,6 +125,11 @@ pub fn instruction(frame: &mut Frame) -> Result {
             ),
         }
     }
+}
+
+fn goto_offset(cursor: &mut Cursor<&[u8]>, current_pc: u64, offset: i16) {
+    // TODO! unsigned offset calc is suck
+    cursor.set_position((current_pc as i64 + offset as i64) as u64);
 }
 
 #[test]
