@@ -94,6 +94,7 @@ pub fn instruction(frame: &mut Frame) -> Result {
             }
 
             Instruction::IF_ICMPGE => {
+                // pc offset should be read anyway, regardless the comp result
                 let next_pc_offset = read_i16(cursor);
                 let val2 = operand_stack.pop().unwrap();
                 let val1 = operand_stack.pop().unwrap();
