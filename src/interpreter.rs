@@ -11,26 +11,19 @@ use crate::instruction::Result::Return;
 use crate::JVM;
 
 pub fn interpret(thread: &mut Thread) -> u64 {
+    let mut result = 0;
+
     while thread.java_virtual_machine_stack.len() >= 1 {
         let frame = thread.java_virtual_machine_stack.last_mut().unwrap();
 
-        let code = &frame.current_method.get_code_attribute().code;
-        let cursor = &mut Cursor::new(code.as_slice());
-        let local_variable = &mut frame.local_variable;
-        let operand_stack = &mut frame.operand_stack;
-
-        frame.pc = cursor.position();
-        let instruction_code = read_u8(cursor);
-        // println!(
-        //     "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
-        //     frame.pc, instruction, instruction_code
-        // );
-
         // pass frame itself, also loop inside instruction. only return when invoke_xxxx / return
-        match instruction(cursor, instruction_code, local_variable, operand_stack) {
-            Return(v) => break v,
-            _ => {}
-        }
+        result = match instruction(frame) {
+            Return(v) => v,
+            _ => 0,
+        };
+
+        // TODO:
+        thread.java_virtual_machine_stack.pop();
     }
 
     println!("Hello, jvm! the result is: {}", result);
@@ -43,14 +36,12 @@ fn test_invoke_sum() {
     let context = frame_test::dummy_class();
     let mut current_method = frame_test::dummy_method(code);
     let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
+    let mut thread = Thread::create();
+    thread.java_virtual_machine_stack.push(frame);
 
-    let result = interpret(&mut frame);
+    let result = interpret(&mut thread);
 
     assert_eq!(result, 3);
-    assert_eq!(frame.pc, 7);
-    // istore_n save local value to 1
-    assert_eq!(frame.local_variable[1], 1);
-    assert_eq!(frame.local_variable[2], 2);
 }
 
 #[test]
@@ -62,8 +53,10 @@ fn test_invoke_loop() {
     let context = frame_test::dummy_class();
     let current_method = frame_test::dummy_method(code);
     let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
+    let mut thread = Thread::create();
+    thread.java_virtual_machine_stack.push(frame);
 
-    let result = interpret(&mut frame);
+    let result = interpret(&mut thread);
 
     assert_eq!(result, 49995000)
 }

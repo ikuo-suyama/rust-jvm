@@ -105,13 +105,14 @@ impl JVM {
 
         // self.interpret(&mut thread, &class, &main_method);
         let mut frame: Frame = Frame::create(&class_ref, &main_method);
+        thread.java_virtual_machine_stack.push(frame);
 
         // thread.java_virtual_machine_stack.push(frame);
         //
         // let top = thread.java_virtual_machine_stack.len() - 1;
         // let frame = thread.java_virtual_machine_stack.get_mut(top).unwrap();
 
-        interpret(&mut frame);
+        interpret(&mut thread);
     }
 }
 
