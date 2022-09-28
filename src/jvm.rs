@@ -40,34 +40,6 @@ pub struct JVM {
     boot_loader: ClassLoader,
 }
 
-// trait Interpreter {
-//     fn interpret<'a>(
-//         &'a self,
-//         thread: &'a mut Thread<'a>,
-//         context: &'a Class,
-//         method: &'a MethodInfo,
-//     ) {
-//     }
-// }
-//
-// impl Interpreter for JVM {
-//     fn interpret<'a>(
-//         &'a self,
-//         thread: &'a mut Thread<'a>,
-//         context: &'a Class,
-//         method: &'a MethodInfo,
-//     ) {
-//         let frame: Frame<'a> = Frame::create(context, method);
-//
-//         thread.java_virtual_machine_stack.push(frame);
-//
-//         let top = thread.java_virtual_machine_stack.len() - 1;
-//         let frame = thread.java_virtual_machine_stack.get_mut(top).unwrap();
-//
-//         interpret(frame);
-//     }
-// }
-
 /// The first primitive JVM. A simple instruction interpreter.
 /// The code array is obtained by the following procedure.
 ///
@@ -94,23 +66,22 @@ impl JVM {
         }
     }
 
-    pub fn launch(mut self, args: &[String]) {
+    pub fn launch(&mut self, args: &[String]) {
         println!("[DEBUG] -- {:?}", args);
 
         let class = self.boot_loader.load_class(&args[0]);
+
+        self.invoke_main(class);
+    }
+
+    fn invoke_main(&mut self, class: Class) {
         let class_ref = self.method_area.get_mut().register_class(class);
         let main_method = find_main(&class_ref);
 
         let mut thread = Thread::create();
 
-        // self.interpret(&mut thread, &class, &main_method);
         let mut frame: Frame = Frame::create(&class_ref, &main_method);
         thread.java_virtual_machine_stack.push(frame);
-
-        // thread.java_virtual_machine_stack.push(frame);
-        //
-        // let top = thread.java_virtual_machine_stack.len() - 1;
-        // let frame = thread.java_virtual_machine_stack.get_mut(top).unwrap();
 
         interpret(&mut thread);
     }
@@ -126,9 +97,3 @@ fn find_main(class: &Class) -> Rc<MethodInfo> {
         .expect("Error: Can't Find Main Method. Please define Main Method as:\npublic static void main(String[] args)");
     Rc::clone(method_ref)
 }
-
-// fn register_method_area(method_area: &RefCell<HashMap<String, Class>>, class: Class) -> &Class {
-//     let descriptor = class.descriptor.clone();
-//     method_area.insert(descriptor.clone(), class);
-//     method_area.get(&*descriptor).unwrap()
-// }
