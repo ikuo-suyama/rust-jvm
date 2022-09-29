@@ -1,4 +1,5 @@
 use std::io::Cursor;
+use std::rc::Rc;
 
 use crate::binary::{read_to, read_u16, read_u32};
 use crate::class_attributes::PredefinedAttributes::Code;
@@ -164,10 +165,10 @@ pub fn parse_fields(
     cursor: &mut Cursor<&[u8]>,
     fields_count: u16,
     cp: &Vec<CpInfo>,
-) -> Vec<FieldInfo> {
-    let mut fields: Vec<FieldInfo> = vec![];
+) -> Vec<Rc<FieldInfo>> {
+    let mut fields: Vec<Rc<FieldInfo>> = vec![];
     for _ in 0..fields_count {
-        fields.push(parse_field(cursor, cp))
+        fields.push(Rc::new(parse_field(cursor, cp)))
     }
     fields
 }
@@ -192,10 +193,10 @@ pub fn parse_methods(
     cursor: &mut Cursor<&[u8]>,
     methods_count: u16,
     cp: &Vec<CpInfo>,
-) -> Vec<MethodInfo> {
-    let mut methods: Vec<MethodInfo> = vec![];
+) -> Vec<Rc<MethodInfo>> {
+    let mut methods: Vec<Rc<MethodInfo>> = vec![];
     for _ in 0..methods_count {
-        methods.push(parse_method(cursor, cp))
+        methods.push(Rc::new(parse_method(cursor, cp)))
     }
     methods
 }
