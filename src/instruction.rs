@@ -1,6 +1,7 @@
 use crate::binary::{debug_bytes, read_i16, read_u16, read_u8};
 use crate::instruction::Invokes::InvokeStatic;
 use crate::instruction::Result::{Invoke, Return};
+use crate::instruction::Returns::IReturn;
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 use std::io;
@@ -12,9 +13,15 @@ pub enum Invokes {
 }
 
 #[derive(Debug)]
+pub enum Returns {
+    IReturn { val: u64 },
+    Return,
+}
+
+#[derive(Debug)]
 pub enum Result {
     Invoke(Invokes),
-    Return(u64),
+    Return(Returns),
 }
 
 pub fn instruction(frame: &mut Frame) -> Result {
@@ -31,10 +38,10 @@ pub fn instruction(frame: &mut Frame) -> Result {
         frame.pc = cursor.position();
         let instruction_code = read_u8(cursor);
         let instruction = Instruction::from(instruction_code);
-        // println!(
-        //     "[VERBOSE] -- frame.pc: {} instruction: {:#?}(0x{:x})",
-        //     frame.pc, instruction, instruction_code
-        // );
+        println!(
+            "[VERBOSE] -- frame.pc: {} instruction: {:#?}(0x{:x})",
+            frame.pc, instruction, instruction_code
+        );
 
         match instruction {
             Instruction::BIPUSH => {
@@ -144,6 +151,10 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 goto_offset(cursor, frame.pc, next_pc_offset);
             }
 
+            Instruction::POP => {
+                operand_stack.pop();
+            }
+
             /// invoke
             Instruction::INVOKESTATIC => {
                 let cp_index = read_u16(cursor);
@@ -153,8 +164,14 @@ pub fn instruction(frame: &mut Frame) -> Result {
             /// return
             Instruction::IRETURN => {
                 let val = operand_stack.pop().unwrap();
-                break Return(val);
+                break Return(IReturn { val });
             }
+
+            Instruction::RETURN => {
+                let val = operand_stack.pop().unwrap();
+                break Return(Returns::Return);
+            }
+
             _ => panic!(
                 "Instruction {:#?}(0x{:x}) isn't implemented yet",
                 instruction, instruction_code
@@ -181,7 +198,7 @@ fn test_invoke_sum() {
 
     let result = instruction(&mut frame);
 
-    assert!(matches!(result, Return(3)));
+    assert!(matches!(result, Return(IReturn { val: 3 })));
 }
 
 #[test]
@@ -198,7 +215,7 @@ fn test_invoke_loop() {
 
     let result = instruction(&mut frame);
 
-    assert!(matches!(result, Return(49995000)))
+    assert!(matches!(result, Return(IReturn { val: 49995000 })));
 }
 
 #[test]
@@ -218,7 +235,6 @@ fn test_invoke_static() {
 
     let result = instruction(&mut frame);
 
-    println!("{:#?}", result);
     assert!(matches!(result, Invoke(InvokeStatic { cp_index: 7 })))
 }
 

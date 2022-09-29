@@ -55,6 +55,13 @@ pub fn i_return(thread: &mut Thread, returned_value: u64) {
     }
 }
 
+pub fn java_return(thread: &mut Thread) {
+    println!("[DEBUG] -- <<<< return");
+
+    // 1. pop current frame from stack
+    let _ = thread.java_virtual_machine_stack.pop().unwrap();
+}
+
 #[test]
 pub fn test_invoke_static() {
     use crate::instruction::frame_test::{dummy_class, dummy_method};
