@@ -1,14 +1,16 @@
-use crate::binary::{read_i16, read_u16, read_u8};
+use crate::binary::{debug_bytes, read_i16, read_u16, read_u8};
 use crate::instruction::Invokes::InvokeStatic;
 use crate::instruction::Result::{Invoke, Return};
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 use std::io::Cursor;
 
+#[derive(Debug)]
 pub enum Invokes {
     InvokeStatic { cp_index: u16 },
 }
 
+#[derive(Debug)]
 pub enum Result {
     Invoke(Invokes),
     Return(u64),
@@ -16,6 +18,8 @@ pub enum Result {
 
 pub fn instruction(frame: &mut Frame) -> Result {
     let code = &frame.current_method.get_code_attribute().code;
+    // debug_bytes(code);
+
     let cursor = &mut Cursor::new(code.as_slice());
     let local_variable = &mut frame.local_variable;
     let operand_stack = &mut frame.operand_stack;
@@ -80,6 +84,14 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 operand_stack.push(result);
             }
 
+            Instruction::ISUB => {
+                let val2 = operand_stack.pop().unwrap();
+                let val1 = operand_stack.pop().unwrap();
+
+                let result = val1 - val2;
+                operand_stack.push(result);
+            }
+
             Instruction::SIPUSH => {
                 // TODO: handle type...
                 let val = read_u16(cursor);
@@ -93,6 +105,15 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 local_variable[index as usize] += const_val as u64;
             }
 
+            Instruction::IFGT => {
+                let next_pc_offset = read_i16(cursor);
+                let val = operand_stack.pop().unwrap();
+
+                if val > 0 {
+                    goto_offset(cursor, frame.pc, next_pc_offset);
+                }
+            }
+
             Instruction::IF_ICMPGE => {
                 // pc offset should be read anyway, regardless the comp result
                 let next_pc_offset = read_i16(cursor);
@@ -100,6 +121,17 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 let val1 = operand_stack.pop().unwrap();
 
                 if val1 >= val2 {
+                    goto_offset(cursor, frame.pc, next_pc_offset);
+                }
+            }
+
+            Instruction::IF_ICMPNE => {
+                // pc offset should be read anyway, regardless the comp result
+                let next_pc_offset = read_i16(cursor);
+                let val2 = operand_stack.pop().unwrap();
+                let val1 = operand_stack.pop().unwrap();
+
+                if val1 != val2 {
                     goto_offset(cursor, frame.pc, next_pc_offset);
                 }
             }
@@ -162,6 +194,27 @@ fn test_invoke_loop() {
     let result = instruction(&mut frame);
 
     assert!(matches!(result, Return(49995000)))
+}
+
+#[test]
+fn test_invoke_static() {
+    use std::rc::Rc;
+
+    // code from Fibonacci.fib
+    let code: Vec<u8> = vec![
+        0x1a, 0x9d, 0x00, 0x05, 0x03, 0xac, 0x1a, 0x04, 0xa0, 0x00, 0x05, 0x04, 0xac, 0x1a, 0x04,
+        0x64, 0xb8, 0x00, 0x07, 0x1a, 0x05, 0x64, 0xb8, 0x00, 0x07, 0x60, 0xac,
+    ];
+    let context = frame_test::dummy_class();
+    let current_method = frame_test::dummy_method(code);
+    let mut frame = Frame::create(&Rc::new(context), &Rc::new(current_method));
+    // argument i = 2
+    frame.local_variable[0] = 2;
+
+    let result = instruction(&mut frame);
+
+    println!("{:#?}", result);
+    assert!(matches!(result, Invoke(InvokeStatic { cp_index: 7 })))
 }
 
 #[cfg(test)]
