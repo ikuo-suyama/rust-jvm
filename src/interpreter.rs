@@ -6,13 +6,15 @@ use crate::invoke::{i_return, invoke_static, java_return};
 use crate::thread::{Frame, Thread};
 use crate::JVM;
 
+const MAX_LOOP_COUNT: i32 = 1_000_000;
+
 pub fn interpret(thread: &mut Thread) {
     let mut counter = 0;
     while thread.java_virtual_machine_stack.len() >= 1 {
-        counter = counter + 1;
-        if counter > 10 {
-            panic!()
+        if counter > MAX_LOOP_COUNT {
+            panic!("[ERROR] MAX_LOOP_COUNT exceeded: Infinite loops are suspected.")
         }
+        counter = counter + 1;
 
         let frame = thread.java_virtual_machine_stack.last_mut().unwrap();
 

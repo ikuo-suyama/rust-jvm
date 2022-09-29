@@ -38,10 +38,10 @@ pub fn instruction(frame: &mut Frame) -> Result {
         frame.pc = cursor.position();
         let instruction_code = read_u8(cursor);
         let instruction = Instruction::from(instruction_code);
-        println!(
-            "[VERBOSE] -- frame.pc: {} instruction: {:#?}(0x{:x})",
-            frame.pc, instruction, instruction_code
-        );
+        // println!(
+        //     "[VERBOSE] -- frame.pc: {} instruction: {:#?}(0x{:x})",
+        //     frame.pc, instruction, instruction_code
+        // );
 
         match instruction {
             Instruction::BIPUSH => {
@@ -168,7 +168,6 @@ pub fn instruction(frame: &mut Frame) -> Result {
             }
 
             Instruction::RETURN => {
-                let val = operand_stack.pop().unwrap();
                 break Return(Returns::Return);
             }
 

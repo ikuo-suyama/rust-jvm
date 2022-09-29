@@ -6,6 +6,13 @@ use crate::thread::{Frame, Thread};
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::str::Chars;
+
+fn parse_descriptor(descriptor: &String) -> String {
+    let arguments = String::from(descriptor.trim_start_matches("("));
+    let arguments: Vec<&str> = arguments.split(")").collect();
+    String::from(arguments[0])
+}
 
 pub fn invoke_static(
     // class_loader: &ClassLoader,
@@ -14,7 +21,7 @@ pub fn invoke_static(
 ) {
     // 0. class lookup
     // TODO: from ClassLoader
-    let current_frame = thread.java_virtual_machine_stack.last().unwrap();
+    let current_frame = thread.java_virtual_machine_stack.last_mut().unwrap();
     let class = &current_frame.context;
 
     // 1. constantpool lookup
@@ -27,11 +34,17 @@ pub fn invoke_static(
         .get(method_ref.name_and_descriptor.as_str())
         .expect(format!("Method Not Found: {}", method_ref.name_and_descriptor).as_str());
 
-    // 3. pop arguments val from current frame operand_stack
-    // TODO: read method descriptor, set arguments
-
-    // 4. create new frame, push arguments as local_val
+    // 3. create new frame, push arguments as local_val
     let mut invoked_frame = Frame::create(class, method_info);
+
+    // 4. pop arguments val from current frame operand_stack, set it to new frame's local val
+    let descriptor = method_ref.descriptor;
+    // TODO: parser, multiple args
+    let args = parse_descriptor(&descriptor);
+    if args.len() > 0 {
+        let arg = current_frame.operand_stack.pop().unwrap();
+        invoked_frame.local_variable[0] = arg;
+    }
 
     // 5. push to java_stack
     thread.java_virtual_machine_stack.push(invoked_frame);
