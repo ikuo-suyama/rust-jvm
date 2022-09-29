@@ -102,3 +102,9 @@ fn find_main(class: &Class) -> Rc<MethodInfo> {
 
     Rc::clone(method_ref)
 }
+
+#[test]
+pub fn test_forloop() {
+    let mut vm = JVM::create();
+    vm.launch(&[String::from("./java/ForLoop")]);
+}

@@ -19,7 +19,7 @@ pub fn interpret(thread: &mut Thread) {
         match instruction(frame) {
             Return(v) => {
                 println!("Hello, jvm! the result is: {}", v);
-                i_return(thread)
+                i_return(thread, v)
             }
             Invoke(invoke) => {
                 if let InvokeStatic { cp_index } = invoke {

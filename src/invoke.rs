@@ -37,18 +37,15 @@ pub fn invoke_static(
     thread.java_virtual_machine_stack.push(invoked_frame);
 }
 
-pub fn i_return(thread: &mut Thread) {
-    // 1. pop current frame from stack,
-    let mut current_frame = thread.java_virtual_machine_stack.pop().unwrap();
+pub fn i_return(thread: &mut Thread, returned_value: u64) {
+    // 1. pop current frame from stack
+    let _ = thread.java_virtual_machine_stack.pop().unwrap();
 
-    // 2. pop operand stack value from current frame
-    let return_value = current_frame.operand_stack.pop().unwrap();
-
-    // 3. get previous frame as invoker
-    let invoker_stack = thread.java_virtual_machine_stack.last_mut().unwrap();
-
-    // 4. push returned value to invoker frame operand_stack
-    invoker_stack.operand_stack.push(return_value);
+    // 2. get previous frame as invoker
+    if let Some(invoker_stack) = thread.java_virtual_machine_stack.last_mut() {
+        // 3. push returned value to invoker frame operand_stack
+        invoker_stack.operand_stack.push(returned_value);
+    }
 }
 
 #[test]
