@@ -35,9 +35,16 @@ pub fn invoke_static(
 
     // 5. push to java_stack
     thread.java_virtual_machine_stack.push(invoked_frame);
+
+    println!(
+        "\n[DEBUG] -- >>>> invoke_static: {}.{}",
+        method_ref.class, method_ref.name_and_descriptor
+    )
 }
 
 pub fn i_return(thread: &mut Thread, returned_value: u64) {
+    println!("[DEBUG] -- <<<< i_return: value: {}", returned_value);
+
     // 1. pop current frame from stack
     let _ = thread.java_virtual_machine_stack.pop().unwrap();
 

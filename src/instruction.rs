@@ -3,7 +3,8 @@ use crate::instruction::Invokes::InvokeStatic;
 use crate::instruction::Result::{Invoke, Return};
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
-use std::io::Cursor;
+use std::io;
+use std::io::{Cursor, Write};
 
 #[derive(Debug)]
 pub enum Invokes {
@@ -21,18 +22,20 @@ pub fn instruction(frame: &mut Frame) -> Result {
     // debug_bytes(code);
 
     let cursor = &mut Cursor::new(code.as_slice());
+    cursor.set_position(frame.pc);
+
     let local_variable = &mut frame.local_variable;
     let operand_stack = &mut frame.operand_stack;
 
-    loop {
+    let result = loop {
         frame.pc = cursor.position();
         let instruction_code = read_u8(cursor);
+        let instruction = Instruction::from(instruction_code);
         // println!(
-        //     "[DEBUG] -- frame.pc: {} instruction: {:#?}(0x{:x})",
+        //     "[VERBOSE] -- frame.pc: {} instruction: {:#?}(0x{:x})",
         //     frame.pc, instruction, instruction_code
         // );
 
-        let instruction = Instruction::from(instruction_code);
         match instruction {
             Instruction::BIPUSH => {
                 // TODO: handle type...
@@ -157,7 +160,9 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 instruction, instruction_code
             ),
         }
-    }
+    };
+    frame.pc = cursor.position();
+    result
 }
 
 fn goto_offset(cursor: &mut Cursor<&[u8]>, current_pc: u64, offset: i16) {

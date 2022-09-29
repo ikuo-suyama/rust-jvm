@@ -104,7 +104,19 @@ fn find_main(class: &Class) -> Rc<MethodInfo> {
 }
 
 #[test]
+pub fn test_simplesum() {
+    let mut vm = JVM::create();
+    vm.launch(&[String::from("./java/SimpleSum")]);
+}
+
+#[test]
 pub fn test_forloop() {
     let mut vm = JVM::create();
     vm.launch(&[String::from("./java/ForLoop")]);
+}
+
+#[test]
+pub fn test_fibonacci() {
+    let mut vm = JVM::create();
+    vm.launch(&[String::from("./java/Fibonacci")]);
 }
