@@ -33,7 +33,10 @@ use crate::class_file::ClassFile;
 pub enum CpInfo {
     /// ConstantPool Structures
     /// [Ref](https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html)
-    ConstantClassInfo { tag: CP_TAGES, name_index: u16 },
+    ConstantClassInfo {
+        tag: CP_TAGES,
+        name_index: u16,
+    },
 
     // Field, Method, Interface
     ConstantFieldref {
@@ -59,12 +62,36 @@ pub enum CpInfo {
         descriptor_index: u16,
     },
 
+    // Primitives
+    ConstantInteger {
+        tag: CP_TAGES,
+        bytes: u32,
+    },
+    ConstantFloat {
+        tag: CP_TAGES,
+        bytes: u32,
+    },
+    ConstantLong {
+        tag: CP_TAGES,
+        high_bytes: u32,
+        low_bytes: u32,
+    },
+    ConstantDouble {
+        tag: CP_TAGES,
+        high_bytes: u32,
+        low_bytes: u32,
+    },
+
     // Utf8
     ConstantUtf8 {
         tag: CP_TAGES,
         length: u16,
         bytes: String,
     },
+
+    // Special Value
+    // Long, Double uses 2 indexes. represent this, put empty val to i+1 index
+    ConstantNull,
 }
 
 #[allow(non_camel_case_types)]
@@ -147,6 +174,26 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
                 tag,
                 name_index: read_u16(cursor),
                 descriptor_index: read_u16(cursor),
+            },
+
+            // Primitives
+            CP_TAGES::CONSTANT_Integer => CpInfo::ConstantInteger {
+                tag,
+                bytes: read_u32(cursor),
+            },
+            CP_TAGES::CONSTANT_Float => CpInfo::ConstantFloat {
+                tag,
+                bytes: read_u32(cursor),
+            },
+            CP_TAGES::CONSTANT_Long => CpInfo::ConstantLong {
+                tag,
+                high_bytes: read_u32(cursor),
+                low_bytes: read_u32(cursor),
+            },
+            CP_TAGES::CONSTANT_Double => CpInfo::ConstantDouble {
+                tag,
+                high_bytes: read_u32(cursor),
+                low_bytes: read_u32(cursor),
             },
 
             // Utf8

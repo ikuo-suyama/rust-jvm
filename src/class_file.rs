@@ -102,3 +102,15 @@ fn test_parse_class() {
     assert_eq!(result.attributes_count, 1);
     assert_eq!(result.attributes.len(), result.attributes_count as usize);
 }
+
+#[test]
+fn test_parse_types() {
+    let binary = read_binary_file(&"java/Types.class".to_owned()).unwrap();
+
+    let result = ClassFile::parse_from(binary.as_slice());
+
+    assert_eq!(
+        result.constant_pool.len(),
+        (result.constant_pool_count - 1) as usize
+    );
+}
