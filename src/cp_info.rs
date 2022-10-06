@@ -144,7 +144,8 @@ impl CP_TAGES {
 pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Vec<CpInfo> {
     let mut constant_pool: Vec<CpInfo> = vec![];
 
-    for i in 1..constant_pool_count {
+    let mut i = 1;
+    while i < constant_pool_count {
         let tag = CP_TAGES::from_u8(read_u8(cursor));
         let cp_info = match tag {
             CP_TAGES::CONSTANT_Class => CpInfo::ConstantClassInfo {
@@ -211,8 +212,21 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
                 tag
             ),
         };
-        println!("[DEBUG] -- Load CP: #{} = {:?}", i, cp_info);
-        constant_pool.push(cp_info);
+
+        // here, CP_Double and CP_Long consumes 2 indexes
+        match cp_info {
+            CpInfo::ConstantDouble { .. } | CpInfo::ConstantLong { .. } => {
+                println!("[DEBUG] -- Load CP: #{} = {:?}", i, cp_info);
+                constant_pool.push(cp_info);
+                constant_pool.push(CpInfo::ConstantNull);
+                i = i + 2;
+            }
+            _ => {
+                println!("[DEBUG] -- Load CP: #{} = {:?}", i, cp_info);
+                constant_pool.push(cp_info);
+                i = i + 1;
+            }
+        }
     }
 
     constant_pool

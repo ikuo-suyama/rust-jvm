@@ -69,7 +69,7 @@ impl JVM {
     pub fn launch(&mut self, args: &[String]) {
         println!("[DEBUG] -- {:?}", args);
 
-        let class = self.boot_loader.load_class(&args[0]);
+        let class = self.boot_loader.find_class(&args[0]);
 
         self.invoke_main(class);
     }

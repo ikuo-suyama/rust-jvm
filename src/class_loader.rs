@@ -7,7 +7,7 @@ use std::collections::HashMap;
 pub struct ClassLoader {}
 
 impl ClassLoader {
-    pub fn load_class(&self, class_name: &String) -> Class {
+    pub fn find_class(&self, class_name: &String) -> Class {
         let filename = class_name.to_owned() + ".class";
         let binary = match read_binary_file(&filename) {
             Ok(class) => class,
