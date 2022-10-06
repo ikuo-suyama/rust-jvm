@@ -10,6 +10,7 @@ mod interpreter;
 mod invoke;
 mod jvm;
 mod thread;
+mod types;
 
 use crate::jvm::JVM;
 use std::env;

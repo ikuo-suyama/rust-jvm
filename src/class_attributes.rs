@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::binary::{read_to, read_u16, read_u32};
 use crate::class_attributes::PredefinedAttributes::Code;
-use crate::cp_info::{constant_pool_value_at, CpInfo};
+use crate::cp_info::{constant_pool_value_as_string, CpInfo};
 
 #[derive(Debug)]
 pub struct FieldInfo {
@@ -233,7 +233,7 @@ fn parse_attribute_info(cursor: &mut Cursor<&[u8]>, cp: &Vec<CpInfo>) -> Attribu
     let attribute_name_index = read_u16(cursor);
     let attribute_length = read_u32(cursor);
 
-    let attribute_name = constant_pool_value_at(cp, attribute_name_index);
+    let attribute_name = constant_pool_value_as_string(cp, attribute_name_index);
     match PredefinedAttributes::from(attribute_name.as_str()) {
         Code => parse_code_attribute_info(cursor, attribute_name_index, attribute_length, cp),
         _ => AttributeInfo::GeneralAttributeInfo(GeneralAttributeInfo {

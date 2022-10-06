@@ -1,7 +1,7 @@
 use crate::binary::read_binary_file;
 use crate::class::ClassMeta;
 use crate::class_file::ClassFile;
-use crate::cp_info::constant_pool_value_at;
+use crate::cp_info::constant_pool_value_as_string;
 use std::collections::HashMap;
 
 pub struct ClassLoader {}
@@ -30,13 +30,14 @@ fn load_class(class_name: &String) -> ClassFile {
 }
 
 fn link_class(class_file: ClassFile) -> ClassMeta {
-    let descriptor = constant_pool_value_at(&class_file.constant_pool, class_file.this_class);
+    let descriptor =
+        constant_pool_value_as_string(&class_file.constant_pool, class_file.this_class);
 
     let mut constant_pool = vec![];
     // constant_pool_index start from 1. then push default to 0
     constant_pool.push(String::from(""));
     for i in 1..class_file.constant_pool_count {
-        let value = constant_pool_value_at(&class_file.constant_pool, i);
+        let value = constant_pool_value_as_string(&class_file.constant_pool, i);
         constant_pool.push(value);
     }
 

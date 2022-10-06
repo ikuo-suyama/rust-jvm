@@ -4,8 +4,8 @@ public class Types {
         int i2 = 2;
         int i3 = i + i2;
 
-        long l = 1;
-        long l2 = 2;
+        long l = 10101010101010L;
+        long l2 = 20202020202020L;
         long l3 = l + l2;
 
         boolean b = true;
@@ -24,8 +24,8 @@ public class Types {
         float f2 = 2.01f;
         float f3 = f + f2;
 
-        double d = 1.001;
-        double d2 = 2.002;
+        double d = 1.0e100;
+        double d2 = 2.0e100;
         double d3 = d + d2;
     }
 }

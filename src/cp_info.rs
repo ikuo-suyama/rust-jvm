@@ -28,6 +28,7 @@ use std::io::Cursor;
 
 use crate::binary::{read_binary_file, read_string_to, read_u16, read_u32, read_u8};
 use crate::class_file::ClassFile;
+use crate::types::{JInteger, JLong, JString, JVMTypes};
 
 #[derive(Debug)]
 pub enum CpInfo {
@@ -232,19 +233,59 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
     constant_pool
 }
 
-pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> String {
+pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> JVMTypes {
+    let parse_cp_value = |cp: &CpInfo| match cp {
+        CpInfo::ConstantInteger { bytes, .. } => JVMTypes::JInteger(JInteger {
+            value: *bytes as i32,
+            bytes: *bytes,
+        }),
+        CpInfo::ConstantLong {
+            high_bytes,
+            low_bytes,
+            ..
+        } => {
+            let value = ((high_bytes << 32) as i64) + low_bytes as i64;
+            JVMTypes::JLong(JLong {
+                value,
+                high_bytes: *high_bytes,
+                low_bytes: *low_bytes,
+            })
+        }
+        _ => {
+            let value = constant_pool_value_as_string(constant_pool, index);
+            JVMTypes::JString(JString { value })
+        }
+    };
+
+    let cp_not_found_error = |index: u16| {
+        panic!(
+            "index out of bounds for constant pool: length {} index {}",
+            constant_pool.len(),
+            index
+        )
+    };
+
+    let maybe_cp = constant_pool.get((index - 1) as usize);
+    let value = match maybe_cp {
+        Some(cp) => parse_cp_value(cp),
+        None => cp_not_found_error(index),
+    };
+    value
+}
+
+pub fn constant_pool_value_as_string(constant_pool: &Vec<CpInfo>, index: u16) -> String {
     let parse_cp_value = |cp: &CpInfo| match cp {
         CpInfo::ConstantUtf8 { tag, length, bytes } => bytes.clone(),
         CpInfo::ConstantClassInfo { tag, name_index } => {
-            constant_pool_value_at(constant_pool, name_index.clone())
+            constant_pool_value_as_string(constant_pool, name_index.clone())
         }
         CpInfo::ConstantNameAndType {
             tag,
             name_index,
             descriptor_index,
         } => {
-            let name = constant_pool_value_at(constant_pool, name_index.clone());
-            let desc = constant_pool_value_at(constant_pool, descriptor_index.clone());
+            let name = constant_pool_value_as_string(constant_pool, name_index.clone());
+            let desc = constant_pool_value_as_string(constant_pool, descriptor_index.clone());
             format!("{}:{}", name, desc)
         }
         CpInfo::ConstantMethodRef {
@@ -252,8 +293,8 @@ pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> String
             class_index,
             name_and_type_index,
         } => {
-            let class = constant_pool_value_at(constant_pool, class_index.clone());
-            let nt = constant_pool_value_at(constant_pool, name_and_type_index.clone());
+            let class = constant_pool_value_as_string(constant_pool, class_index.clone());
+            let nt = constant_pool_value_as_string(constant_pool, name_and_type_index.clone());
             format!("{}.{}", class, nt)
         }
         CpInfo::ConstantFieldref {
@@ -261,8 +302,8 @@ pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> String
             class_index,
             name_and_type_index,
         } => {
-            let class = constant_pool_value_at(constant_pool, class_index.clone());
-            let nt = constant_pool_value_at(constant_pool, name_and_type_index.clone());
+            let class = constant_pool_value_as_string(constant_pool, class_index.clone());
+            let nt = constant_pool_value_as_string(constant_pool, name_and_type_index.clone());
             format!("{}.{}", class, nt)
         }
         _ => todo!("not implemented yet!!"),
@@ -305,20 +346,31 @@ fn test_constant_pool_value_at() {
 
     // for cp index, see @sampleSum.jvm file
     let cp = class_file.constant_pool;
-    let utf8 = constant_pool_value_at(&cp, 29);
+    let utf8 = constant_pool_value_as_string(&cp, 29);
     assert_eq!(utf8, "SimpleSum.java");
 
-    let class = constant_pool_value_at(&cp, 2);
+    let class = constant_pool_value_as_string(&cp, 2);
     assert_eq!(class, "java/lang/Object");
 
-    let name_and_type = constant_pool_value_at(&cp, 3);
+    let name_and_type = constant_pool_value_as_string(&cp, 3);
     assert_eq!(name_and_type, "<init>:()V");
 
-    let method_ref = constant_pool_value_at(&cp, 1);
+    let method_ref = constant_pool_value_as_string(&cp, 1);
     assert_eq!(method_ref, "java/lang/Object.<init>:()V");
 
-    let field_ref = constant_pool_value_at(&cp, 7);
+    let field_ref = constant_pool_value_as_string(&cp, 7);
     assert_eq!(field_ref, "java/lang/System.out:Ljava/io/PrintStream;");
+}
+
+#[test]
+fn test_constant_pool_value_at_static() {
+    let binary = read_binary_file(&"java/Types.class".to_owned()).unwrap();
+    let class_file = ClassFile::parse_from(binary.as_slice());
+
+    // for cp index, see @sampleSum.jvm file
+    let cp = class_file.constant_pool;
+    let utf8 = constant_pool_value_as_string(&cp, 9);
+    assert_eq!(utf8, "SimpleSum.java");
 }
 
 #[test]
@@ -328,5 +380,5 @@ fn test_constant_pool_value_obe() {
     let class_file = ClassFile::parse_from(binary.as_slice());
     let cp = class_file.constant_pool;
 
-    let _ = constant_pool_value_at(&cp, 31);
+    let _ = constant_pool_value_as_string(&cp, 31);
 }
