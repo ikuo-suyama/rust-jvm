@@ -244,9 +244,9 @@ pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> JVMTyp
             low_bytes,
             ..
         } => {
-            let value = ((high_bytes << 32) as i64) + low_bytes as i64;
+            let value = ((*high_bytes as u64) << 32) + *low_bytes as u64;
             JVMTypes::JLong(JLong {
-                value,
+                value: value as i64,
                 high_bytes: *high_bytes,
                 low_bytes: *low_bytes,
             })
@@ -306,7 +306,7 @@ pub fn constant_pool_value_as_string(constant_pool: &Vec<CpInfo>, index: u16) ->
             let nt = constant_pool_value_as_string(constant_pool, name_and_type_index.clone());
             format!("{}.{}", class, nt)
         }
-        _ => todo!("not implemented yet!!"),
+        _ => panic!("not String type CP passed. cp: {:#?}", cp),
     };
     let cp_not_found_error = |index: u16| {
         panic!(
@@ -363,7 +363,32 @@ fn test_constant_pool_value_at() {
 }
 
 #[test]
-fn test_constant_pool_value_at_static() {
+fn test_constant_pool_value_static() {
+    let binary = read_binary_file(&"java/Types.class".to_owned()).unwrap();
+    let class_file = ClassFile::parse_from(binary.as_slice());
+
+    // for cp index, see @sampleSum.jvm file
+    let cp = class_file.constant_pool;
+
+    let int = constant_pool_value_at(&cp, 7);
+    let expected = JInteger {
+        value: 1001001001,
+        bytes: 1001001001 as u32,
+    };
+    assert_eq!(int, JVMTypes::JInteger(expected));
+
+    let long = constant_pool_value_at(&cp, 11);
+    let expected = JLong {
+        value: 20202020202020 as i64,
+        high_bytes: 4703 as u32,
+        low_bytes: 2789008932 as u32,
+    };
+    assert_eq!(long, JVMTypes::JLong(expected));
+}
+
+#[test]
+#[should_panic]
+fn test_constant_pool_value_static_to_string() {
     let binary = read_binary_file(&"java/Types.class".to_owned()).unwrap();
     let class_file = ClassFile::parse_from(binary.as_slice());
 
