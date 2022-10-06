@@ -28,7 +28,7 @@ use std::io::Cursor;
 
 use crate::binary::{read_binary_file, read_string_to, read_u16, read_u32, read_u8};
 use crate::class_file::ClassFile;
-use crate::types::{JInteger, JLong, JString, JVMTypes};
+use crate::types::{JDouble, JFloat, JInteger, JLong, JString, JVMTypes};
 
 #[derive(Debug)]
 pub enum CpInfo {
@@ -235,22 +235,22 @@ pub fn parse_cp_info(cursor: &mut Cursor<&[u8]>, constant_pool_count: u16) -> Ve
 
 pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> JVMTypes {
     let parse_cp_value = |cp: &CpInfo| match cp {
-        CpInfo::ConstantInteger { bytes, .. } => JVMTypes::JInteger(JInteger {
-            value: *bytes as i32,
-            bytes: *bytes,
-        }),
+        CpInfo::ConstantInteger { bytes, .. } => JVMTypes::create_integer(bytes),
+
         CpInfo::ConstantLong {
             high_bytes,
             low_bytes,
             ..
-        } => {
-            let value = ((*high_bytes as u64) << 32) + *low_bytes as u64;
-            JVMTypes::JLong(JLong {
-                value: value as i64,
-                high_bytes: *high_bytes,
-                low_bytes: *low_bytes,
-            })
-        }
+        } => JVMTypes::create_long(high_bytes, low_bytes),
+
+        CpInfo::ConstantFloat { bytes, .. } => JVMTypes::create_float(bytes),
+
+        CpInfo::ConstantDouble {
+            high_bytes,
+            low_bytes,
+            ..
+        } => JVMTypes::create_double(high_bytes, low_bytes),
+
         _ => {
             let value = constant_pool_value_as_string(constant_pool, index);
             JVMTypes::JString(JString { value })
@@ -384,6 +384,22 @@ fn test_constant_pool_value_static() {
         low_bytes: 2789008932 as u32,
     };
     assert_eq!(long, JVMTypes::JLong(expected));
+
+    let float = constant_pool_value_at(&cp, 13);
+    let expected = JFloat {
+        // value: 1.01 as f32,
+        value: 1.01 as f32,
+        bytes: 1065437102,
+    };
+    assert_eq!(float, JVMTypes::JFloat(expected));
+
+    let double = constant_pool_value_at(&cp, 15);
+    let expected = JDouble {
+        value: 1.0e100 as f64,
+        high_bytes: 1420970413,
+        low_bytes: 630506365,
+    };
+    assert_eq!(double, JVMTypes::JDouble(expected));
 }
 
 #[test]
