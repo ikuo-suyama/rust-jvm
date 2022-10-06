@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::class_attributes::{FieldInfo, MethodInfo};
-use crate::cp_info::constant_pool_value_as_string;
 
 #[derive(Debug)]
 pub struct MethodRef {

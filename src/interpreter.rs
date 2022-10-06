@@ -1,10 +1,8 @@
 use crate::instruction::Invokes::InvokeStatic;
 use crate::instruction::Result::{Invoke, Return};
 use crate::instruction::{instruction, Returns};
-use crate::instruction_set::Instruction;
 use crate::invoke::{i_return, invoke_static, java_return};
-use crate::thread::{Frame, Thread};
-use crate::JVM;
+use crate::thread::Thread;
 
 const MAX_LOOP_COUNT: i32 = 1_000_000;
 

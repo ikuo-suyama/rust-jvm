@@ -1,9 +1,5 @@
-use crate::binary::debug_bytes;
 use crate::class::ClassMeta;
 use crate::class_attributes::MethodInfo;
-use crate::interpreter::interpret;
-use crate::JVM;
-use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
 pub struct Thread {

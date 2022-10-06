@@ -6,7 +6,6 @@ use crate::class::ClassMeta;
 use crate::class_attributes::MethodInfo;
 use crate::class_loader::ClassLoader;
 use crate::interpreter::interpret;
-use crate::main;
 use crate::thread::{Frame, Thread};
 
 pub struct MethodArea {

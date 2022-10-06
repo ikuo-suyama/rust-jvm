@@ -275,32 +275,32 @@ pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> JVMTyp
 
 pub fn constant_pool_value_as_string(constant_pool: &Vec<CpInfo>, index: u16) -> String {
     let parse_cp_value = |cp: &CpInfo| match cp {
-        CpInfo::ConstantUtf8 { tag, length, bytes } => bytes.clone(),
-        CpInfo::ConstantClassInfo { tag, name_index } => {
+        CpInfo::ConstantUtf8 { bytes, .. } => bytes.clone(),
+        CpInfo::ConstantClassInfo { name_index, .. } => {
             constant_pool_value_as_string(constant_pool, name_index.clone())
         }
         CpInfo::ConstantNameAndType {
-            tag,
             name_index,
             descriptor_index,
+            ..
         } => {
             let name = constant_pool_value_as_string(constant_pool, name_index.clone());
             let desc = constant_pool_value_as_string(constant_pool, descriptor_index.clone());
             format!("{}:{}", name, desc)
         }
         CpInfo::ConstantMethodRef {
-            tag,
             class_index,
             name_and_type_index,
+            ..
         } => {
             let class = constant_pool_value_as_string(constant_pool, class_index.clone());
             let nt = constant_pool_value_as_string(constant_pool, name_and_type_index.clone());
             format!("{}.{}", class, nt)
         }
         CpInfo::ConstantFieldref {
-            tag,
             class_index,
             name_and_type_index,
+            ..
         } => {
             let class = constant_pool_value_as_string(constant_pool, class_index.clone());
             let nt = constant_pool_value_as_string(constant_pool, name_and_type_index.clone());

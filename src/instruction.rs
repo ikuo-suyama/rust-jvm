@@ -1,11 +1,10 @@
-use crate::binary::{debug_bytes, read_i16, read_u16, read_u8};
+use crate::binary::{read_i16, read_u16, read_u8};
 use crate::instruction::Invokes::InvokeStatic;
 use crate::instruction::Result::{Invoke, Return};
 use crate::instruction::Returns::IReturn;
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
-use std::io;
-use std::io::{Cursor, Write};
+use std::io::Cursor;
 
 #[derive(Debug)]
 pub enum Invokes {
@@ -155,13 +154,13 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 operand_stack.pop();
             }
 
-            /// invoke
+            // invoke
             Instruction::INVOKESTATIC => {
                 let cp_index = read_u16(cursor);
                 break Invoke(InvokeStatic { cp_index });
             }
 
-            /// return
+            // return
             Instruction::IRETURN => {
                 let val = operand_stack.pop().unwrap();
                 break Return(IReturn { val });

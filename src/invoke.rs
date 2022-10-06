@@ -1,12 +1,6 @@
 use crate::class::MethodRef;
-use crate::class_loader::ClassLoader;
-use crate::cp_info::constant_pool_value_as_string;
-use crate::interpreter::interpret;
 use crate::thread::{Frame, Thread};
-use std::borrow::Borrow;
-use std::cell::RefCell;
 use std::rc::Rc;
-use std::str::Chars;
 
 fn parse_descriptor(descriptor: &String) -> String {
     let arguments = String::from(descriptor.trim_start_matches("("));
