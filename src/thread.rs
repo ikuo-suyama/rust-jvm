@@ -1,5 +1,5 @@
 use crate::binary::debug_bytes;
-use crate::class::Class;
+use crate::class::ClassMeta;
 use crate::class_attributes::MethodInfo;
 use crate::interpreter::interpret;
 use crate::JVM;
@@ -23,12 +23,12 @@ pub struct Frame {
     pub pc: u64,
     pub local_variable: Vec<u64>,
     pub operand_stack: Vec<u64>,
-    pub context: Rc<Class>,
+    pub context: Rc<ClassMeta>,
     pub current_method: Rc<MethodInfo>,
 }
 
 impl Frame {
-    pub fn create(context: &Rc<Class>, current_method: &Rc<MethodInfo>) -> Self {
+    pub fn create(context: &Rc<ClassMeta>, current_method: &Rc<MethodInfo>) -> Self {
         let max_locals = current_method.get_code_attribute().max_locals;
         Frame {
             pc: 0,

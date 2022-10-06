@@ -241,13 +241,13 @@ fn test_invoke_static() {
 pub mod frame_test {
     use std::collections::HashMap;
 
-    use crate::class::Class;
+    use crate::class::ClassMeta;
     use crate::class_attributes::{AttributeInfo, CodeAttributeInfo, MethodInfo};
 
-    pub fn dummy_class() -> Class {
-        Class {
+    pub fn dummy_class() -> ClassMeta {
+        ClassMeta {
             descriptor: "dummy".to_string(),
-            constant_pool: vec![],
+            runtime_constant_pool: vec![],
             methods: HashMap::new(),
             fields: HashMap::new(),
         }

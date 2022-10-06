@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::class::Class;
+use crate::class::ClassMeta;
 use crate::class_attributes::MethodInfo;
 use crate::class_loader::ClassLoader;
 use crate::interpreter::interpret;
@@ -10,7 +10,7 @@ use crate::main;
 use crate::thread::{Frame, Thread};
 
 pub struct MethodArea {
-    class_area: HashMap<String, Rc<Class>>,
+    class_area: HashMap<String, Rc<ClassMeta>>,
     thread_area: HashMap<String, Rc<Thread>>,
 }
 
@@ -21,14 +21,14 @@ impl MethodArea {
             thread_area: HashMap::new(),
         }
     }
-    pub fn register_class(&mut self, class: Class) -> Rc<Class> {
+    pub fn register_class(&mut self, class: ClassMeta) -> Rc<ClassMeta> {
         let class_ref = Rc::new(class);
         let result = Rc::clone(&class_ref);
         self.class_area
             .insert(class_ref.descriptor.clone(), class_ref);
         result
     }
-    pub fn lookup_class(&mut self, name: String) -> Option<Rc<Class>> {
+    pub fn lookup_class(&mut self, name: String) -> Option<Rc<ClassMeta>> {
         self.class_area
             .get(name.as_str())
             .map(|class_ref| Rc::clone(class_ref))
@@ -74,7 +74,7 @@ impl JVM {
         self.invoke_main(class);
     }
 
-    fn invoke_main(&mut self, class: Class) {
+    fn invoke_main(&mut self, class: ClassMeta) {
         let class_ref = self.method_area.get_mut().register_class(class);
         let main_method = find_main(&class_ref);
 
@@ -91,7 +91,7 @@ static MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:([Ljava/lang/String;)V";
 /// fetch target method as main for now
 static STUB_MAIN_METHOD_NAME_DESCRIPTOR: &str = "main:()I";
 
-fn find_main(class: &Class) -> Rc<MethodInfo> {
+fn find_main(class: &ClassMeta) -> Rc<MethodInfo> {
     // TODO: keep backward compatibility by STUB_MAIN_METHOD_NAME_DESCRIPTOR. remove this later
     let stub_method_ref = class.methods.get(STUB_MAIN_METHOD_NAME_DESCRIPTOR);
     let main_method_ref = class.methods.get(MAIN_METHOD_NAME_DESCRIPTOR);

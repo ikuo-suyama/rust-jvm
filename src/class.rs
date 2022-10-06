@@ -27,21 +27,21 @@ impl MethodRef {
 }
 
 #[derive(Debug)]
-pub struct Class {
+pub struct ClassMeta {
     pub descriptor: String,
-    pub constant_pool: Vec<String>,
+    pub runtime_constant_pool: Vec<String>,
     pub methods: HashMap<String, Rc<MethodInfo>>,
     pub fields: HashMap<String, Rc<FieldInfo>>,
 }
 
-impl Class {
+impl ClassMeta {
     pub fn constant_pool_value_at(&self, index: u16) -> String {
         assert!(
-            self.constant_pool.len() > index as usize,
+            self.runtime_constant_pool.len() > index as usize,
             "constant_pool out of bounds: cp size {}, given index {}",
-            self.constant_pool.len(),
+            self.runtime_constant_pool.len(),
             index
         );
-        self.constant_pool[index as usize].clone()
+        self.runtime_constant_pool[index as usize].clone()
     }
 }

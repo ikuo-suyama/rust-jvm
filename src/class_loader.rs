@@ -1,5 +1,5 @@
 use crate::binary::read_binary_file;
-use crate::class::Class;
+use crate::class::ClassMeta;
 use crate::class_file::ClassFile;
 use crate::cp_info::constant_pool_value_at;
 use std::collections::HashMap;
@@ -7,25 +7,29 @@ use std::collections::HashMap;
 pub struct ClassLoader {}
 
 impl ClassLoader {
-    pub fn find_class(&self, class_name: &String) -> Class {
-        let filename = class_name.to_owned() + ".class";
-        let binary = match read_binary_file(&filename) {
-            Ok(class) => class,
-            Err(_e) => panic!(
-                "Error: Can not find or read class {}\n Reason {}",
-                class_name, _e
-            ),
-        };
-
-        let class_file = ClassFile::parse_from(binary.as_slice());
-        // too messy, turn on when only needed...
-        // println!("{:#?}", class_file);
-
-        create_class_from(class_file)
+    pub fn find_class(&self, class_name: &String) -> ClassMeta {
+        let class_file = load_class(class_name);
+        link_class(class_file)
     }
 }
 
-fn create_class_from(class_file: ClassFile) -> Class {
+fn load_class(class_name: &String) -> ClassFile {
+    let filename = class_name.to_owned() + ".class";
+    let binary = match read_binary_file(&filename) {
+        Ok(class) => class,
+        Err(_e) => panic!(
+            "Error: Can not find or read class {}\n Reason {}",
+            class_name, _e
+        ),
+    };
+
+    let class_file = ClassFile::parse_from(binary.as_slice());
+    // too messy, turn on when only needed...
+    // println!("[VERBOSE] -- {:#?}", class_file);
+    class_file
+}
+
+fn link_class(class_file: ClassFile) -> ClassMeta {
     let descriptor = constant_pool_value_at(&class_file.constant_pool, class_file.this_class);
 
     let mut constant_pool = vec![];
@@ -52,9 +56,9 @@ fn create_class_from(class_file: ClassFile) -> Class {
         fields.insert(field_id, field);
     }
 
-    let class = Class {
+    let class = ClassMeta {
         descriptor,
-        constant_pool,
+        runtime_constant_pool: constant_pool,
         methods,
         fields,
     };
@@ -68,11 +72,14 @@ pub fn test_create_class() {
     let class_file = ClassFile::parse_from(binary.as_slice());
     let cp_count = class_file.constant_pool_count;
 
-    let result = create_class_from(class_file);
+    let result = link_class(class_file);
 
     assert_eq!(result.descriptor, "SimpleSum");
-    assert_eq!(result.constant_pool[1], "java/lang/Object.<init>:()V");
-    assert_eq!(result.constant_pool.len(), cp_count as usize);
+    assert_eq!(
+        result.runtime_constant_pool[1],
+        "java/lang/Object.<init>:()V"
+    );
+    assert_eq!(result.runtime_constant_pool.len(), cp_count as usize);
 
     assert!(result.methods.get("main:()I").is_some());
 }

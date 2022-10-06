@@ -85,7 +85,7 @@ pub fn test_invoke_static() {
     let mut class = dummy_class();
     let full_method_name = String::from("Dummy.main:()I");
     let cp = vec![String::from(""), full_method_name.clone()];
-    class.constant_pool = cp;
+    class.runtime_constant_pool = cp;
 
     // icnost_2, ireturn
     let method_name = String::from("main:()I");
