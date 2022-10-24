@@ -1,7 +1,8 @@
 use crate::binary::read_binary_file;
 use crate::class::ClassMeta;
 use crate::class_file::ClassFile;
-use crate::cp_info::constant_pool_value_as_string;
+use crate::cp_info::{constant_pool_value_as_string, constant_pool_value_at};
+use crate::types::{JString, JVMTypes};
 use std::collections::HashMap;
 
 pub struct ClassLoader {}
@@ -33,26 +34,32 @@ fn link_class(class_file: ClassFile) -> ClassMeta {
     let descriptor =
         constant_pool_value_as_string(&class_file.constant_pool, class_file.this_class);
 
-    let mut constant_pool = vec![];
+    let mut constant_pool: Vec<JVMTypes> = vec![];
+    let empty = JVMTypes::JString(JString {
+        value: "".to_string(),
+    });
     // constant_pool_index start from 1. then push default to 0
-    constant_pool.push(String::from(""));
+    constant_pool.push(empty);
     for i in 1..class_file.constant_pool_count {
-        let value = constant_pool_value_as_string(&class_file.constant_pool, i);
+        let value = constant_pool_value_at(&class_file.constant_pool, i);
         constant_pool.push(value);
     }
 
     let mut methods = HashMap::new();
     for method in class_file.methods {
-        let method_name = constant_pool[method.name_index as usize].clone();
-        let method_descriptor = constant_pool[method.descriptor_index as usize].clone();
+        let method_name =
+            constant_pool_value_as_string(&class_file.constant_pool, method.name_index);
+        let method_descriptor =
+            constant_pool_value_as_string(&class_file.constant_pool, method.descriptor_index);
         let method_id = format!("{}:{}", method_name, method_descriptor);
         methods.insert(method_id, method);
     }
 
     let mut fields = HashMap::new();
     for field in class_file.fields {
-        let field_name = constant_pool[field.name_index as usize].clone();
-        let field_descriptor = constant_pool[field.descriptor_index as usize].clone();
+        let field_name = constant_pool_value_as_string(&class_file.constant_pool, field.name_index);
+        let field_descriptor =
+            constant_pool_value_as_string(&class_file.constant_pool, field.descriptor_index);
         let field_id = format!("{}:{}", field_name, field_descriptor);
         fields.insert(field_id, field);
     }
@@ -77,7 +84,7 @@ pub fn test_create_class() {
 
     assert_eq!(result.descriptor, "SimpleSum");
     assert_eq!(
-        result.runtime_constant_pool[1],
+        result.constant_pool_value_as_string(1),
         "java/lang/Object.<init>:()V"
     );
     assert_eq!(result.runtime_constant_pool.len(), cp_count as usize);

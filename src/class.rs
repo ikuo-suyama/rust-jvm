@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::class_attributes::{FieldInfo, MethodInfo};
+use crate::types::JVMTypes;
 
 #[derive(Debug)]
 pub struct MethodRef {
@@ -28,13 +29,13 @@ impl MethodRef {
 #[derive(Debug)]
 pub struct ClassMeta {
     pub descriptor: String,
-    pub runtime_constant_pool: Vec<String>,
+    pub runtime_constant_pool: Vec<JVMTypes>,
     pub methods: HashMap<String, Rc<MethodInfo>>,
     pub fields: HashMap<String, Rc<FieldInfo>>,
 }
 
 impl ClassMeta {
-    pub fn constant_pool_value_at(&self, index: u16) -> String {
+    pub fn constant_pool_value_at(&self, index: u16) -> JVMTypes {
         assert!(
             self.runtime_constant_pool.len() > index as usize,
             "constant_pool out of bounds: cp size {}, given index {}",
@@ -42,5 +43,14 @@ impl ClassMeta {
             index
         );
         self.runtime_constant_pool[index as usize].clone()
+    }
+    pub fn constant_pool_value_as_string(&self, index: u16) -> String {
+        match self.constant_pool_value_at(index) {
+            JVMTypes::JString(jstr) => jstr.value,
+            it => panic!(
+                "Unexpected access to CP: index {} expected as String, but {:#?}",
+                index, it
+            ),
+        }
     }
 }

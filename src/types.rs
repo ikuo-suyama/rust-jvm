@@ -1,37 +1,35 @@
-use crate::JVM;
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JString {
     pub value: String,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JInteger {
     pub value: i32,
     pub bytes: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JLong {
     pub value: i64,
     pub high_bytes: u32,
     pub low_bytes: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JFloat {
     pub value: f32,
     pub bytes: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JDouble {
     pub value: f64,
     pub high_bytes: u32,
     pub low_bytes: u32,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum JVMTypes {
     JString(JString),
     JInteger(JInteger),
@@ -41,6 +39,12 @@ pub enum JVMTypes {
 }
 
 impl JVMTypes {
+    pub fn create_string(value: &str) -> JVMTypes {
+        let val = JString {
+            value: value.to_string(),
+        };
+        JVMTypes::JString(val)
+    }
     pub fn create_integer(bytes: &u32) -> JVMTypes {
         let val = JInteger {
             value: *bytes as i32,

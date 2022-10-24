@@ -1,5 +1,6 @@
 use crate::class::MethodRef;
 use crate::thread::{Frame, Thread};
+use crate::types::JVMTypes;
 use std::rc::Rc;
 
 fn parse_descriptor(descriptor: &String) -> String {
@@ -19,7 +20,7 @@ pub fn invoke_static(
     let class = &current_frame.context;
 
     // 1. constantpool lookup
-    let method_descriptor = class.constant_pool_value_at(methodref_cp_index);
+    let method_descriptor = class.constant_pool_value_as_string(methodref_cp_index);
     let method_ref = MethodRef::parse_from(method_descriptor);
 
     // 2. method lookup
@@ -77,8 +78,11 @@ pub fn test_invoke_static() {
     let mut thread = Thread::create();
 
     let mut class = dummy_class();
-    let full_method_name = String::from("Dummy.main:()I");
-    let cp = vec![String::from(""), full_method_name.clone()];
+    let full_method_name = "Dummy.main:()I";
+    let cp = vec![
+        JVMTypes::create_string(""),
+        JVMTypes::create_string(full_method_name),
+    ];
     class.runtime_constant_pool = cp;
 
     // icnost_2, ireturn
