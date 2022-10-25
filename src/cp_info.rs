@@ -251,6 +251,8 @@ pub fn constant_pool_value_at(constant_pool: &Vec<CpInfo>, index: u16) -> JVMTyp
             ..
         } => JVMTypes::create_double(high_bytes, low_bytes),
 
+        CpInfo::ConstantNull => JVMTypes::JNull,
+
         _ => {
             let value = constant_pool_value_as_string(constant_pool, index);
             JVMTypes::JString(JString { value })

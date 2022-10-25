@@ -31,6 +31,7 @@ pub struct JDouble {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum JVMTypes {
+    JNull,
     JString(JString),
     JInteger(JInteger),
     JLong(JLong),

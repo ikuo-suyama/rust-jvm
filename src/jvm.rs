@@ -119,3 +119,9 @@ pub fn test_fibonacci() {
     let mut vm = JVM::create();
     vm.launch(&[String::from("./java/Fibonacci")]);
 }
+
+#[test]
+pub fn test_types() {
+    let mut vm = JVM::create();
+    vm.launch(&[String::from("./java/Types")]);
+}

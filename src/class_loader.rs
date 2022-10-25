@@ -35,11 +35,9 @@ fn link_class(class_file: ClassFile) -> ClassMeta {
         constant_pool_value_as_string(&class_file.constant_pool, class_file.this_class);
 
     let mut constant_pool: Vec<JVMTypes> = vec![];
-    let empty = JVMTypes::JString(JString {
-        value: "".to_string(),
-    });
-    // constant_pool_index start from 1. then push default to 0
-    constant_pool.push(empty);
+
+    // constant_pool_index start from 1. then push Null to 0
+    constant_pool.push(JVMTypes::JNull);
     for i in 1..class_file.constant_pool_count {
         let value = constant_pool_value_at(&class_file.constant_pool, i);
         constant_pool.push(value);
