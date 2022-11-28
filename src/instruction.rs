@@ -5,6 +5,7 @@ use crate::instruction::Returns::IReturn;
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
 use std::io::Cursor;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub enum Invokes {
@@ -145,6 +146,13 @@ pub fn instruction(frame: &mut Frame) -> Result {
                 }
             }
 
+            // Instruction::LDC => {
+            //     let index = read_u8(cursor);
+            //     let context = Rc::clone(&frame.context);
+            //     let val = context.runtime_constant_pool[index as usize].clone();
+            //
+            //     operand_stack.push(val);
+            // }
             Instruction::GOTO => {
                 let next_pc_offset = read_i16(cursor);
                 goto_offset(cursor, frame.pc, next_pc_offset);
