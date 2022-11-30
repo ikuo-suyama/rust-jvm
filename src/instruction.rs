@@ -4,6 +4,7 @@ use crate::instruction::Result::{Invoke, Return};
 use crate::instruction::Returns::IReturn;
 use crate::instruction_set::Instruction;
 use crate::thread::Frame;
+use crate::types::JVMTypes;
 use std::io::Cursor;
 use std::rc::Rc;
 
@@ -47,17 +48,17 @@ pub fn instruction(frame: &mut Frame) -> Result {
             Instruction::BIPUSH => {
                 // TODO: handle type...
                 let val = read_u8(cursor);
-                operand_stack.push(val as u64);
+                operand_stack.push(JVMTypes::create_byte(&(val as u32)));
             }
 
             Instruction::ICONST_0 => {
-                operand_stack.push(0);
+                operand_stack.push(JVMTypes::create_integer(&0u32));
             }
             Instruction::ICONST_1 => {
-                operand_stack.push(1);
+                operand_stack.push(JVMTypes::create_integer(&1u32));
             }
             Instruction::ICONST_2 => {
-                operand_stack.push(2);
+                operand_stack.push(JVMTypes::create_integer(&2u32));
             }
 
             Instruction::ISTORE_0 => {

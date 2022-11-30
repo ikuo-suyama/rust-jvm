@@ -4,6 +4,18 @@ pub struct JString {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct JByte {
+    pub value: i8,
+    pub bytes: u32,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct JShort {
+    pub value: i16,
+    pub bytes: u32,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct JInteger {
     pub value: i32,
     pub bytes: u32,
@@ -33,6 +45,8 @@ pub struct JDouble {
 pub enum JVMTypes {
     JNull,
     JString(JString),
+    JByte(JByte),
+    JShort(JShort),
     JInteger(JInteger),
     JLong(JLong),
     JFloat(JFloat),
@@ -46,6 +60,24 @@ impl JVMTypes {
         };
         JVMTypes::JString(val)
     }
+
+    // TODO: &u32 -> u32?
+    pub fn create_byte(bytes: &u32) -> JVMTypes {
+        let val = JByte {
+            value: *bytes as i8,
+            bytes: *bytes,
+        };
+        JVMTypes::JByte(val)
+    }
+
+    pub fn create_short(bytes: &u32) -> JVMTypes {
+        let val = JShort {
+            value: *bytes as i16,
+            bytes: *bytes,
+        };
+        JVMTypes::JShort(val)
+    }
+
     pub fn create_integer(bytes: &u32) -> JVMTypes {
         let val = JInteger {
             value: *bytes as i32,

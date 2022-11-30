@@ -1,5 +1,6 @@
 use crate::class::ClassMeta;
 use crate::class_attributes::MethodInfo;
+use crate::types::JVMTypes;
 use std::rc::Rc;
 
 pub struct Thread {
@@ -17,8 +18,8 @@ impl Thread {
 #[derive(Debug)]
 pub struct Frame {
     pub pc: u64,
-    pub local_variable: Vec<u64>,
-    pub operand_stack: Vec<u64>,
+    pub local_variable: Vec<JVMTypes>,
+    pub operand_stack: Vec<JVMTypes>,
     pub context: Rc<ClassMeta>,
     pub current_method: Rc<MethodInfo>,
 }
